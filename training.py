@@ -45,6 +45,7 @@ def construct_model():
 
 def switch_training():
 	train_a = not train_a
+	
 
 def main():
 	# Create a model
