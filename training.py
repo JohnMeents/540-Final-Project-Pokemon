@@ -116,6 +116,15 @@ class pokemon:
 
 	def step(self, action):
 		self.counter += 1
+		if action == 0:
+			self.state[0] += 1
+		elif action == 1:
+			self.state[0] -= 1
+		elif action == 2:
+			self.state[1] += 1
+		elif action == 3:
+			self.state[1] -= 1
+		print(self.state)
 		return self.state, 1 if self.state[0] == 1 else -1, self.counter == 100
 
 	def getstate(self):
