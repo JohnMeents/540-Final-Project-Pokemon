@@ -343,6 +343,32 @@ def battleSim(Team1, Team2):
     else:
         delayPrint("Team 2 wins!\n")
 
+def isGameOver(team1: Team, team2: Team):
+    return not team1.hasAvailablePokemon or not team2.hasAvailablePokemon
+
+
+# Perform a step in the game simulation. This is primarily used by the AI
+def step(team1: Team, team2: Team, team1_action, team2_action):
+    # TODO: Store observation before performing move and compare? OR store rewards in class? Latter may be less performance heavy
+    # ...
+
+    # Perform the turn/round
+    fightSim(team1, team2, team1_action, team2_action)
+
+    # Determine observation, or new state space
+    observation = getState(team1, team2)
+
+    # TODO: Determine rewards for each team
+    reward_a = 0
+    reward_b = 0
+
+    # Determine if game (episode) is over
+    gameOver = isGameOver(team1, team2)
+
+    # Return observation, rewards, gameOver
+    # TODO: Is there any other info the AI needs?
+    return observation, [reward_a, reward_b], gameOver
+
 
 def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
     # do nothing if the move is 5 or 6 (a switch)

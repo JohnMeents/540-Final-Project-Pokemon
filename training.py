@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-#import pokemon
+import pokemon
 
 class ReplayBuffer():
 	def __init__(self, max_size, input_dims):
@@ -102,38 +102,6 @@ class Agent():
 	def load_model(self):
 		raise Exception("Not yet implemented")
 
-class pokemon:
-
-	def __init__(self):
-		self.state = np.array([0, 0, 0, 0])
-		self.counter = 0
-
-	def fitness(self, side):
-		if side == 0:
-			return float(self.state[0]) - float(self.state[3] / 2.0)
-		else:
-			return float(self.state[2]) - float(self.state[1] / 2.0)
-
-	def step(self, action):
-		self.counter += 1
-		if action == 0:
-			self.state[0] += 1
-		elif action == 1:
-			self.state[0] -= 1
-		elif action == 2:
-			self.state[1] += 1
-		elif action == 3:
-			self.state[1] -= 1
-		print(self.state)
-		return self.state, 1 if self.state[0] == 1 else -1, self.counter == 100
-
-	def getstate(self):
-		return self.state
-
-	def reset(self):
-		self.state = np.array([0, 0, 0, 0])
-		self.counter = 0
-
 
 # ---------- Constants ----------
 learning_rate = 0.001
@@ -144,13 +112,14 @@ max_steps = 10000000 # Maximum number of iterations to perform training
 reward_game_win = 1000 # Reward when the AI wins a game
 reward_game_loss = -1000 # Reward when the AI loses a game
 
-space_size = 4 # Number of parameters in the observation space
-action_size = 4 # Number of actions that can be performed by the player
+space_size = 154 # Number of parameters in the observation space
+action_size = 6 # Number of actions that can be performed by the player
 
 # ---------- Global variables ----------
 train_a = True # Set to True if player A is the one that's currently training
 
 def switch_training():
+	global train_a
 	train_a = not train_a
 
 
@@ -166,30 +135,43 @@ def main():
 	scores = []
 	epsilon_history = []
 
-	game = pokemon()
+	team_a = pokemon.generate_team_1()
+	team_b = pokemon.generate_team_2()
 
 	# Play n games
 	for current_game in range(num_games):
 		print('New Game', current_game)
 		done = False
-		score = 0
+		score_a = 0
+		score_b = 0
 
 		# Create a new instance of the pokemon game simulator
-		game.reset()
-		observation = game.getstate()
+		# RESET
+		# TODO: This may be pretty slow
+		team_a = pokemon.generate_team_1()
+		team_b = pokemon.generate_team_2()
+
+		observation = pokemon.getState(team_a, team_b)
 
 		# Store how many steps player A/B has made since they started being the one training
 		current_switch_step = 0
 
-		current_model = model_a if train_a else model_b
-
 		while not done:
-			action = current_model.choose_action(observation)
-			new_observation, reward, done = game.step(action)
-			score += reward
-			current_model.store_transition(observation, action, reward, new_observation, done)
+			# Choose actions for both teams
+			# TODO: This looks kinda sloppy
+			action_a = model_a.choose_action(observation)
+			action_b = model_b.choose_action(observation)
+
+			new_observation, reward, done = pokemon.step(team_a, team_b, action_a, action_b)
+
+			score_a += reward[0]
+			score_b += reward[1]
+
+			model_a.store_transition(observation, action_a, reward[0], new_observation, done)
+			model_b.store_transition(observation, action_b, reward[1], new_observation, done)
+
 			observation = new_observation
-			current_model.learn()
+			model_a.learn() if train_a else model_b.learn()
 
 		# Increment or reset switch_step
 		if current_switch_step == switch_steps:
@@ -200,13 +182,13 @@ def main():
 		else:
 			current_switch_step += 1
 
-		epsilon_history.append(current_model.epsilon)
-		scores.append(score)
+		epsilon_history.append(model_a.epsilon if train_a else model_b.epsilon)
+		scores.append([score_a, score_b])
 
-		avg_score = np.mean(scores[-50:])
-		print('Episode: ', current_game, 'Score %.2f' % score,
+		avg_score = np.mean(scores[-50:][int(not train_a)])
+		print('Episode: ', current_game, 'Score %.2f' % score_a if train_a else score_b,
 			  'average_score %.2f' % avg_score,
-			  'epsilon %.2f' % current_model.epsilon)
+			  'epsilon %.2f' % model_a.epsilon if train_a else model_b.epsilon)
 
 
 if __name__ == '__main__':
