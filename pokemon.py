@@ -12,6 +12,12 @@ pokemon_types = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice",
                  "Fighting", "Poison", "Ground", "Flying", "Psychic",
                  "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"]
 
+# Used to map string values of pokemon_types to an integer for machine learning
+pokemon_types_dict = {'Normal': 1, 'Fire': 2, 'Water': 3, 'Electric': 4, 'Grass': 5, 'Ice': 6, 'Fighting': 7,
+                      'Poison': 8, 'Ground': 9, 'Flying': 10, 'Psychic': 11, 'Bug': 12, 'Rock': 13, 'Ghost': 14,
+                      'Dragon': 15, 'Dark': 16, 'Steel': 17, 'Fairy': 18}
+
+
 # A 2 Dimenstional Numpy Array Of Damage Multipliers For Attacking Pokemon:
 # Origin of this table is at the top left and the sequence follows the list above
 # the row represents the attacking pokemon, the column represents the defending pokemon
@@ -76,7 +82,15 @@ class Team:
         self.Pokemon2 = Pokemon2
         self.Pokemon3 = Pokemon3
         self.activePokemon = Pokemon1
+        self.activePokemonN = 1
         self.hasAvailablePokemon = True
+
+    # Returns an array that represents parameters about this object
+    def toArray(self):
+        return self.Pokemon1.toArray() + \
+            self.Pokemon2.toArray() + \
+            self.Pokemon3.toArray() + \
+            [self.activePokemonN, int(self.hasAvailablePokemon)]
 
 
 # Pokemon Class
@@ -99,6 +113,15 @@ class Pokemon:
         self.item = item  # implement last
         self.level = 100  # pokemon are automatically set to level 100
 
+    # Returns an array that represents parameters about this object
+    def toArray(self):
+        # Generate integer values for these strings
+        types_int = pokemon_types_dict[self.types] if self.types is not None else 0
+        type2_int = pokemon_types_dict[self.type2] if self.type2 is not None else 0
+
+        return [types_int, type2_int, self.healthPercentage, self.attack,
+                self.spattack, self.defense, self.spdefense, self.speed, self.maxHp] \
+               + [item for items in self.moves for item in items.toArray()]
 
 # Moves Class
 class Move:
@@ -110,25 +133,41 @@ class Move:
         self.accuracy = accuracy  # moves with 101 accuracy cannot be lowered
         self.effect = effect  # implement last
 
+    # Returns an array that represents parameters about this object
+    def toArray(self):
+        physpc_int = 0 if self.physpc is None \
+            else 1 if self.physpc == 'special' \
+            else 2 if self.physpc == 'status' \
+            else -1
+        basePower_int = self.basePower if self.basePower is not None else -1
+        return [pokemon_types_dict[self.moveType], physpc_int, basePower_int, self.accuracy]
+
 
 # a function that takes an integer as an action, an int/bool as team and pokemon info
 def fightSim(Team1, Team2, team1Action, team2Action):
+    print(Team1.toArray())
     # if they switch pokemon, that action happens first before the opponent moves
     # switching Team1 pokemon
     if(team1Action == 5 or team1Action == 6):
         if(team1Action == 5 and Team1.Pokemon1.hp > 0 and Team1.activePokemon != Team1.Pokemon1):
             Team1.activePokemon = Team1.Pokemon1
+            Team1.activePokemonN = 1
         elif(team1Action == 5 and Team1.Pokemon2.hp > 0 and Team1.activePokemon != Team1.Pokemon2):
             Team1.activePokemon = Team1.Pokemon2
+            Team1.activePokemonN = 2
         elif(team1Action == 5 and Team1.Pokemon3.hp > 0 and Team1.activePokemon != Team1.Pokemon3):
             Team1.activePokemon = Team1.Pokemon3
+            Team1.activePokemonN = 3
 
         elif(team1Action == 6 and Team1.Pokemon3.hp > 0 and Team1.activePokemon != Team1.Pokemon3):
             Team1.activePokemon = Team1.Pokemon3
+            Team1.activePokemonN = 3
         elif(team1Action == 6 and Team1.Pokemon2.hp > 0 and Team1.activePokemon != Team1.Pokemon2):
             Team1.activePokemon = Team1.Pokemon2
+            Team1.activePokemonN = 2
         elif(team1Action == 6 and Team1.Pokemon1.hp > 0 and Team1.activePokemon != Team1.Pokemon1):
             Team1.activePokemon = Team1.Pokemon1
+            Team1.activePokemonN = 1
         else:
             pass
 
@@ -136,17 +175,23 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     if(team2Action == 5 or team2Action == 6):
         if(team2Action == 5 and Team2.Pokemon1.hp > 0 and Team2.activePokemon != Team2.Pokemon1):
             Team2.activePokemon = Team2.Pokemon1
+            Team2.activePokemonN = 1
         elif(team2Action == 5 and Team2.Pokemon2.hp > 0 and Team2.activePokemon != Team2.Pokemon2):
             Team2.activePokemon = Team2.Pokemon2
+            Team2.activePokemonN = 2
         elif(team2Action == 5 and Team2.Pokemon3.hp > 0 and Team2.activePokemon != Team2.Pokemon3):
             Team2.activePokemon = Team2.Pokemon3
+            Team2.activePokemonN = 3
 
         elif(team2Action == 6 and Team2.Pokemon3.hp > 0 and Team2.activePokemon != Team2.Pokemon3):
             Team2.activePokemon = Team2.Pokemon3
+            Team2.activePokemonN = 3
         elif(team2Action == 6 and Team2.Pokemon2.hp > 0 and Team2.activePokemon != Team2.Pokemon2):
             Team2.activePokemon = Team2.Pokemon2
+            Team2.activePokemonN = 2
         elif(team2Action == 6 and Team2.Pokemon1.hp > 0 and Team2.activePokemon != Team2.Pokemon1):
             Team2.activePokemon = Team2.Pokemon1
+            Team2.activePokemonN = 1
         else:
             pass
 
@@ -173,6 +218,12 @@ def fightSim(Team1, Team2, team1Action, team2Action):
         delayPrint(Team2.activePokemon.name +
                    " fainted!\nChoose an available Pokemon!\n")
 
+# Returns an array of parameters
+def getState(team1, team2):
+    state = []
+
+def fitness(team1_before, team2_before, team1_after, team2_after):
+    pass
 
 def battleSim(Team1, Team2):
     txt = "default"
@@ -259,10 +310,13 @@ def battleSim(Team1, Team2):
                 txt = input()
                 if(txt == "1"):
                     Team1.activePokemon = Team1.Pokemon1
+                    Team1.activePokemonN = 1
                 elif(txt == "2"):
                     Team1.activePokemon = Team1.Pokemon2
+                    Team1.activePokemonN = 2
                 elif(txt == "3"):
                     Team1.activePokemon = Team1.Pokemon3
+                    Team1.activePokemonN = 3
                 else:
                     delayPrint("Error in setting new active pokemon")
             elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
@@ -271,10 +325,13 @@ def battleSim(Team1, Team2):
                 txt = input()
                 if(txt == "1"):
                     Team2.activePokemon = Team2.Pokemon1
+                    Team2.activePokemonN = 1
                 elif(txt == "2"):
                     Team2.activePokemon = Team2.Pokemon2
+                    Team2.activePokemonN = 2
                 elif(txt == "3"):
                     Team2.activePokemon = Team2.Pokemon3
+                    Team2.activePokemonN = 3
                 else:
                     delayPrint("Error in setting new active pokemon")
             else:
