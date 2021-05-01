@@ -12,6 +12,12 @@ pokemon_types = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice",
                  "Fighting", "Poison", "Ground", "Flying", "Psychic",
                  "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"]
 
+# Used to map string values of pokemon_types to an integer for machine learning
+pokemon_types_dict = {'Normal': 1, 'Fire': 2, 'Water': 3, 'Electric': 4, 'Grass': 5, 'Ice': 6, 'Fighting': 7,
+                      'Poison': 8, 'Ground': 9, 'Flying': 10, 'Psychic': 11, 'Bug': 12, 'Rock': 13, 'Ghost': 14,
+                      'Dragon': 15, 'Dark': 16, 'Steel': 17, 'Fairy': 18}
+
+
 # A 2 Dimenstional Numpy Array Of Damage Multipliers For Attacking Pokemon:
 # Origin of this table is at the top left and the sequence follows the list above
 # the row represents the attacking pokemon, the column represents the defending pokemon
@@ -76,7 +82,15 @@ class Team:
         self.Pokemon2 = Pokemon2
         self.Pokemon3 = Pokemon3
         self.activePokemon = Pokemon1
+        self.activePokemonN = 1
         self.hasAvailablePokemon = True
+
+    # Returns an array that represents parameters about this object
+    def toArray(self):
+        return self.Pokemon1.toArray() + \
+            self.Pokemon2.toArray() + \
+            self.Pokemon3.toArray() + \
+            [self.activePokemonN, int(self.hasAvailablePokemon)]
 
 
 # Pokemon Class
@@ -99,6 +113,15 @@ class Pokemon:
         self.item = item  # implement last
         self.level = 100  # pokemon are automatically set to level 100
 
+    # Returns an array that represents parameters about this object
+    def toArray(self):
+        # Generate integer values for these strings
+        types_int = pokemon_types_dict[self.types] if self.types is not None else 0
+        type2_int = pokemon_types_dict[self.type2] if self.type2 is not None else 0
+
+        return [types_int, type2_int, self.healthPercentage, self.attack,
+                self.spattack, self.defense, self.spdefense, self.speed, self.maxHp] \
+               + [item for items in self.moves for item in items.toArray()]
 
 # Moves Class
 class Move:
@@ -110,6 +133,15 @@ class Move:
         self.accuracy = accuracy  # moves with 101 accuracy cannot be lowered
         self.effect = effect  # implement last
 
+    # Returns an array that represents parameters about this object
+    def toArray(self):
+        physpc_int = 0 if self.physpc is None \
+            else 1 if self.physpc == 'special' \
+            else 2 if self.physpc == 'status' \
+            else -1
+        basePower_int = self.basePower if self.basePower is not None else -1
+        return [pokemon_types_dict[self.moveType], physpc_int, basePower_int, self.accuracy]
+
 
 # a function that takes an integer as an action, an int/bool as team and pokemon info
 def fightSim(Team1, Team2, team1Action, team2Action):
@@ -118,17 +150,23 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     if(team1Action == 5 or team1Action == 6):
         if(team1Action == 5 and Team1.Pokemon1.hp > 0 and Team1.activePokemon != Team1.Pokemon1):
             Team1.activePokemon = Team1.Pokemon1
+            Team1.activePokemonN = 1
         elif(team1Action == 5 and Team1.Pokemon2.hp > 0 and Team1.activePokemon != Team1.Pokemon2):
             Team1.activePokemon = Team1.Pokemon2
+            Team1.activePokemonN = 2
         elif(team1Action == 5 and Team1.Pokemon3.hp > 0 and Team1.activePokemon != Team1.Pokemon3):
             Team1.activePokemon = Team1.Pokemon3
+            Team1.activePokemonN = 3
 
         elif(team1Action == 6 and Team1.Pokemon3.hp > 0 and Team1.activePokemon != Team1.Pokemon3):
             Team1.activePokemon = Team1.Pokemon3
+            Team1.activePokemonN = 3
         elif(team1Action == 6 and Team1.Pokemon2.hp > 0 and Team1.activePokemon != Team1.Pokemon2):
             Team1.activePokemon = Team1.Pokemon2
+            Team1.activePokemonN = 2
         elif(team1Action == 6 and Team1.Pokemon1.hp > 0 and Team1.activePokemon != Team1.Pokemon1):
             Team1.activePokemon = Team1.Pokemon1
+            Team1.activePokemonN = 1
         else:
             pass
 
@@ -136,17 +174,23 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     if(team2Action == 5 or team2Action == 6):
         if(team2Action == 5 and Team2.Pokemon1.hp > 0 and Team2.activePokemon != Team2.Pokemon1):
             Team2.activePokemon = Team2.Pokemon1
+            Team2.activePokemonN = 1
         elif(team2Action == 5 and Team2.Pokemon2.hp > 0 and Team2.activePokemon != Team2.Pokemon2):
             Team2.activePokemon = Team2.Pokemon2
+            Team2.activePokemonN = 2
         elif(team2Action == 5 and Team2.Pokemon3.hp > 0 and Team2.activePokemon != Team2.Pokemon3):
             Team2.activePokemon = Team2.Pokemon3
+            Team2.activePokemonN = 3
 
         elif(team2Action == 6 and Team2.Pokemon3.hp > 0 and Team2.activePokemon != Team2.Pokemon3):
             Team2.activePokemon = Team2.Pokemon3
+            Team2.activePokemonN = 3
         elif(team2Action == 6 and Team2.Pokemon2.hp > 0 and Team2.activePokemon != Team2.Pokemon2):
             Team2.activePokemon = Team2.Pokemon2
+            Team2.activePokemonN = 2
         elif(team2Action == 6 and Team2.Pokemon1.hp > 0 and Team2.activePokemon != Team2.Pokemon1):
             Team2.activePokemon = Team2.Pokemon1
+            Team2.activePokemonN = 1
         else:
             pass
 
@@ -172,6 +216,11 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     if(Team2.activePokemon.hp <= 0):
         delayPrint(Team2.activePokemon.name +
                    " fainted!\nChoose an available Pokemon!\n")
+
+
+# Returns an array of parameters
+def getState(team1: Team, team2: Team):
+    return team1.toArray() + team2.toArray()
 
 
 def battleSim(Team1, Team2):
@@ -259,10 +308,13 @@ def battleSim(Team1, Team2):
                 txt = input()
                 if(txt == "1"):
                     Team1.activePokemon = Team1.Pokemon1
+                    Team1.activePokemonN = 1
                 elif(txt == "2"):
                     Team1.activePokemon = Team1.Pokemon2
+                    Team1.activePokemonN = 2
                 elif(txt == "3"):
                     Team1.activePokemon = Team1.Pokemon3
+                    Team1.activePokemonN = 3
                 else:
                     delayPrint("Error in setting new active pokemon")
             elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
@@ -271,10 +323,13 @@ def battleSim(Team1, Team2):
                 txt = input()
                 if(txt == "1"):
                     Team2.activePokemon = Team2.Pokemon1
+                    Team2.activePokemonN = 1
                 elif(txt == "2"):
                     Team2.activePokemon = Team2.Pokemon2
+                    Team2.activePokemonN = 2
                 elif(txt == "3"):
                     Team2.activePokemon = Team2.Pokemon3
+                    Team2.activePokemonN = 3
                 else:
                     delayPrint("Error in setting new active pokemon")
             else:
@@ -287,6 +342,32 @@ def battleSim(Team1, Team2):
         delayPrint("Team 1 wins!\n")
     else:
         delayPrint("Team 2 wins!\n")
+
+def isGameOver(team1: Team, team2: Team):
+    return not team1.hasAvailablePokemon or not team2.hasAvailablePokemon
+
+
+# Perform a step in the game simulation. This is primarily used by the AI
+def step(team1: Team, team2: Team, team1_action, team2_action):
+    # TODO: Store observation before performing move and compare? OR store rewards in class? Latter may be less performance heavy
+    # ...
+
+    # Perform the turn/round
+    fightSim(team1, team2, team1_action, team2_action)
+
+    # Determine observation, or new state space
+    observation = getState(team1, team2)
+
+    # TODO: Determine rewards for each team
+    reward_a = 0
+    reward_b = 0
+
+    # Determine if game (episode) is over
+    gameOver = isGameOver(team1, team2)
+
+    # Return observation, rewards, gameOver
+    # TODO: Is there any other info the AI needs?
+    return observation, [reward_a, reward_b], gameOver
 
 
 def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
@@ -319,7 +400,8 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
     # damage = [( [ (([2*Pokemon1.level]/5)+2) *pokemon1.moves.basePower * (Pokemon1.attackOrSpecialAttack/Pokemon2.defenseOrSpecialDefense)] /50) +2] * Modifier
 
 
-def main():
+# Generates a Team object for Team 1 and returns it
+def generate_team_1():
     # -------------------------creating moves---------------------------------------
     # pikachu moves
     Thunderbolt = Move("Thunderbolt", pokemon_types[3], "special",
@@ -347,6 +429,25 @@ def main():
         "Blizzard", pokemon_types[5], "special", 120, 70, "10 percent chance to freeze target")
     HyperBeam = Move(
         "HyperBeam", pokemon_types[0], "special", 150, 90, "User cannot move next turn")
+
+    # create Team1
+    pikachuMoves = [Thunderbolt, SignalBeam, NastyPlot, ThunderWave]
+    snorlaxMoves = [BodySlam, Rest, Yawn, SleepTalk]
+    wishcashMoves = [HydroPump, EarthPower, Blizzard, HyperBeam]
+    Pikachu = Pokemon("Pikachu", pokemon_types[3], None, 100, pikachuMoves, None,
+                      211, 103, 218, 96, 117, 279, "Static", "Light Ball")
+    Snorlax = Pokemon("Snorlax", pokemon_types[0], None, 100, snorlaxMoves, None, 462, 319, 149, 166, 350, 96,
+                      "Thick Fat (reduce incoming ice and fire damage my 50 percent)",
+                      "Chesto Berry (immediately cure yourself from sleep, one time use, can still attack that turn)")
+    WishCash = Pokemon("WishCash", pokemon_types[2], pokemon_types[8], 100, wishcashMoves, None, 361, 144, 276, 182,
+                       179, 219,
+                       "Oblivious: does nothing useful, feel free to make up your own ability",
+                       "Halves damag taken from a supereffective grass type attack, single use")
+    return Team("Team1", Pikachu, Snorlax, WishCash)
+
+# Generates a Team object for Team 2 and returns it
+def generate_team_2():
+    # -------------------------creating moves---------------------------------------
     # Charizard Moves
     Flamethrower = Move(
         "Flamethrower", pokemon_types[1], "special", 95, 100, "10 percent chance to burn target")
@@ -356,7 +457,8 @@ def main():
         "EarthQuake", pokemon_types[8], "physical", 100, 100, None)
     FocusBlast = Move("FocusBlast", pokemon_types[6], "special", 120,
                       70, "10 percent chance to lower target's spdef my 1 stage")
-    # Blastoise Moves (he also has moves already implemented above)
+    # Blastoise Moves
+    HydroPump = Move("Hydro Pump", pokemon_types[2], "special", 120, 80, None)
     HiddenPowerGrass = Move("Hidden Power Grass",
                             pokemon_types[4], "special", 70, 100, None)
     # Venusaur Moves
@@ -368,30 +470,34 @@ def main():
         "Sleep Powder", pokemon_types[4], "status", None, 75, "Causes the target to fall asleep")
     Synthesis = Move(
         "Synthesis", pokemon_types[4], "status", None, 101, "Heals the user by 50 percent max hp")
-    # ------------------------------------------------------------------------------
-    # create Team1
-    pikachuMoves = [Thunderbolt, SignalBeam, NastyPlot, ThunderWave]
-    snorlaxMoves = [BodySlam, Rest, Yawn, SleepTalk]
-    wishcashMoves = [HydroPump, EarthPower, Blizzard, HyperBeam]
-    Pikachu = Pokemon("Pikachu", pokemon_types[3], None, 100, pikachuMoves, None,
-                      211, 103, 218, 96, 117, 279, "Static", "Light Ball")
-    Snorlax = Pokemon("Snorlax", pokemon_types[0], None, 100, snorlaxMoves, None, 462, 319, 149, 166, 350, 96,
-                      "Thick Fat (reduce incoming ice and fire damage my 50 percent)", "Chesto Berry (immediately cure yourself from sleep, one time use, can still attack that turn)")
-    WishCash = Pokemon("WishCash", pokemon_types[2], pokemon_types[8], 100, wishcashMoves, None, 361, 144, 276, 182, 179, 219,
-                       "Oblivious: does nothing useful, feel free to make up your own ability", "Halves damag taken from a supereffective grass type attack, single use")
-    Team1 = Team("Team1", Pikachu, Snorlax, WishCash)
 
+    # ------------------------------------------------------------------------------
     # create Team2
     charizardMoves = [Flamethrower, SolarBeam, Earthquake, FocusBlast]
     blastoiseMoves = [HydroPump, Earthquake, FocusBlast, HiddenPowerGrass]
     venusaurMoves = [GigaDrain, SludgeBomb, SleepPowder, Synthesis]
-    Charizard = Pokemon("Charizard", pokemon_types[1], pokemon_types[9], 100, charizardMoves, None, 297, 225, 317, 192, 185, 299,
-                        "Blaze: when under 1/3 health, your fire moves do 1.5 damage", "Power Herb: 2 turn attacks skip charging turn. 1 time use")
+    Charizard = Pokemon("Charizard", pokemon_types[1], pokemon_types[9], 100, charizardMoves, None, 297, 225, 317, 192,
+                        185, 299,
+                        "Blaze: when under 1/3 health, your fire moves do 1.5 damage",
+                        "Power Herb: 2 turn attacks skip charging turn. 1 time use")
     Blastoise = Pokemon("Blastoise", pokemon_types[2], None, 100, blastoiseMoves, None, 299, 180, 294, 236, 247, 255,
-                        "Torrent: when under 1/3 hp, your water attacks do 1.5 damage", "Sitrus Berry: restores 1/4 max hp when at or under 1/2 max hp")
-    Venusaur = Pokemon("Venusaur", pokemon_types[4], pokemon_types[7], 100, venusaurMoves, None, 301, 152, 299, 203, 328, 196,
-                       "Overgrow: when  under 1/3 health, your grass moves do 1.5 damage", "At the end of every turn, the user restores 1/16 of its maximum hp")
-    Team2 = Team("Team2", Charizard, Blastoise, Venusaur)
+                        "Torrent: when under 1/3 hp, your water attacks do 1.5 damage",
+                        "Sitrus Berry: restores 1/4 max hp when at or under 1/2 max hp")
+    Venusaur = Pokemon("Venusaur", pokemon_types[4], pokemon_types[7], 100, venusaurMoves, None, 301, 152, 299, 203,
+                       328, 196,
+                       "Overgrow: when  under 1/3 health, your grass moves do 1.5 damage",
+                       "At the end of every turn, the user restores 1/16 of its maximum hp")
+    return Team("Team2", Charizard, Blastoise, Venusaur)
+
+
+# Pokemon simulation game when running pokemon.py
+# During machine learning team generation and battle simulation will happen independently of battleSim() function
+def main():
+
+    # Generate teams
+    Team1 = generate_team_1()
+    Team2 = generate_team_2()
+
 
     # test print
     #delayPrint("This pokemon AI wants to be the very best, like no one ever was\n")
