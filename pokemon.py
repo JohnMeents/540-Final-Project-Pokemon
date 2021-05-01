@@ -145,7 +145,6 @@ class Move:
 
 # a function that takes an integer as an action, an int/bool as team and pokemon info
 def fightSim(Team1, Team2, team1Action, team2Action):
-    print(Team1.toArray())
     # if they switch pokemon, that action happens first before the opponent moves
     # switching Team1 pokemon
     if(team1Action == 5 or team1Action == 6):
@@ -218,12 +217,11 @@ def fightSim(Team1, Team2, team1Action, team2Action):
         delayPrint(Team2.activePokemon.name +
                    " fainted!\nChoose an available Pokemon!\n")
 
-# Returns an array of parameters
-def getState(team1, team2):
-    state = []
 
-def fitness(team1_before, team2_before, team1_after, team2_after):
-    pass
+# Returns an array of parameters
+def getState(team1: Team, team2: Team):
+    return team1.toArray() + team2.toArray()
+
 
 def battleSim(Team1, Team2):
     txt = "default"
@@ -376,7 +374,8 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
     # damage = [( [ (([2*Pokemon1.level]/5)+2) *pokemon1.moves.basePower * (Pokemon1.attackOrSpecialAttack/Pokemon2.defenseOrSpecialDefense)] /50) +2] * Modifier
 
 
-def main():
+# Generates a Team object for Team 1 and returns it
+def generate_team_1():
     # -------------------------creating moves---------------------------------------
     # pikachu moves
     Thunderbolt = Move("Thunderbolt", pokemon_types[3], "special",
@@ -404,6 +403,25 @@ def main():
         "Blizzard", pokemon_types[5], "special", 120, 70, "10 percent chance to freeze target")
     HyperBeam = Move(
         "HyperBeam", pokemon_types[0], "special", 150, 90, "User cannot move next turn")
+
+    # create Team1
+    pikachuMoves = [Thunderbolt, SignalBeam, NastyPlot, ThunderWave]
+    snorlaxMoves = [BodySlam, Rest, Yawn, SleepTalk]
+    wishcashMoves = [HydroPump, EarthPower, Blizzard, HyperBeam]
+    Pikachu = Pokemon("Pikachu", pokemon_types[3], None, 100, pikachuMoves, None,
+                      211, 103, 218, 96, 117, 279, "Static", "Light Ball")
+    Snorlax = Pokemon("Snorlax", pokemon_types[0], None, 100, snorlaxMoves, None, 462, 319, 149, 166, 350, 96,
+                      "Thick Fat (reduce incoming ice and fire damage my 50 percent)",
+                      "Chesto Berry (immediately cure yourself from sleep, one time use, can still attack that turn)")
+    WishCash = Pokemon("WishCash", pokemon_types[2], pokemon_types[8], 100, wishcashMoves, None, 361, 144, 276, 182,
+                       179, 219,
+                       "Oblivious: does nothing useful, feel free to make up your own ability",
+                       "Halves damag taken from a supereffective grass type attack, single use")
+    return Team("Team1", Pikachu, Snorlax, WishCash)
+
+# Generates a Team object for Team 2 and returns it
+def generate_team_2():
+    # -------------------------creating moves---------------------------------------
     # Charizard Moves
     Flamethrower = Move(
         "Flamethrower", pokemon_types[1], "special", 95, 100, "10 percent chance to burn target")
@@ -413,7 +431,8 @@ def main():
         "EarthQuake", pokemon_types[8], "physical", 100, 100, None)
     FocusBlast = Move("FocusBlast", pokemon_types[6], "special", 120,
                       70, "10 percent chance to lower target's spdef my 1 stage")
-    # Blastoise Moves (he also has moves already implemented above)
+    # Blastoise Moves
+    HydroPump = Move("Hydro Pump", pokemon_types[2], "special", 120, 80, None)
     HiddenPowerGrass = Move("Hidden Power Grass",
                             pokemon_types[4], "special", 70, 100, None)
     # Venusaur Moves
@@ -425,30 +444,34 @@ def main():
         "Sleep Powder", pokemon_types[4], "status", None, 75, "Causes the target to fall asleep")
     Synthesis = Move(
         "Synthesis", pokemon_types[4], "status", None, 101, "Heals the user by 50 percent max hp")
-    # ------------------------------------------------------------------------------
-    # create Team1
-    pikachuMoves = [Thunderbolt, SignalBeam, NastyPlot, ThunderWave]
-    snorlaxMoves = [BodySlam, Rest, Yawn, SleepTalk]
-    wishcashMoves = [HydroPump, EarthPower, Blizzard, HyperBeam]
-    Pikachu = Pokemon("Pikachu", pokemon_types[3], None, 100, pikachuMoves, None,
-                      211, 103, 218, 96, 117, 279, "Static", "Light Ball")
-    Snorlax = Pokemon("Snorlax", pokemon_types[0], None, 100, snorlaxMoves, None, 462, 319, 149, 166, 350, 96,
-                      "Thick Fat (reduce incoming ice and fire damage my 50 percent)", "Chesto Berry (immediately cure yourself from sleep, one time use, can still attack that turn)")
-    WishCash = Pokemon("WishCash", pokemon_types[2], pokemon_types[8], 100, wishcashMoves, None, 361, 144, 276, 182, 179, 219,
-                       "Oblivious: does nothing useful, feel free to make up your own ability", "Halves damag taken from a supereffective grass type attack, single use")
-    Team1 = Team("Team1", Pikachu, Snorlax, WishCash)
 
+    # ------------------------------------------------------------------------------
     # create Team2
     charizardMoves = [Flamethrower, SolarBeam, Earthquake, FocusBlast]
     blastoiseMoves = [HydroPump, Earthquake, FocusBlast, HiddenPowerGrass]
     venusaurMoves = [GigaDrain, SludgeBomb, SleepPowder, Synthesis]
-    Charizard = Pokemon("Charizard", pokemon_types[1], pokemon_types[9], 100, charizardMoves, None, 297, 225, 317, 192, 185, 299,
-                        "Blaze: when under 1/3 health, your fire moves do 1.5 damage", "Power Herb: 2 turn attacks skip charging turn. 1 time use")
+    Charizard = Pokemon("Charizard", pokemon_types[1], pokemon_types[9], 100, charizardMoves, None, 297, 225, 317, 192,
+                        185, 299,
+                        "Blaze: when under 1/3 health, your fire moves do 1.5 damage",
+                        "Power Herb: 2 turn attacks skip charging turn. 1 time use")
     Blastoise = Pokemon("Blastoise", pokemon_types[2], None, 100, blastoiseMoves, None, 299, 180, 294, 236, 247, 255,
-                        "Torrent: when under 1/3 hp, your water attacks do 1.5 damage", "Sitrus Berry: restores 1/4 max hp when at or under 1/2 max hp")
-    Venusaur = Pokemon("Venusaur", pokemon_types[4], pokemon_types[7], 100, venusaurMoves, None, 301, 152, 299, 203, 328, 196,
-                       "Overgrow: when  under 1/3 health, your grass moves do 1.5 damage", "At the end of every turn, the user restores 1/16 of its maximum hp")
-    Team2 = Team("Team2", Charizard, Blastoise, Venusaur)
+                        "Torrent: when under 1/3 hp, your water attacks do 1.5 damage",
+                        "Sitrus Berry: restores 1/4 max hp when at or under 1/2 max hp")
+    Venusaur = Pokemon("Venusaur", pokemon_types[4], pokemon_types[7], 100, venusaurMoves, None, 301, 152, 299, 203,
+                       328, 196,
+                       "Overgrow: when  under 1/3 health, your grass moves do 1.5 damage",
+                       "At the end of every turn, the user restores 1/16 of its maximum hp")
+    return Team("Team2", Charizard, Blastoise, Venusaur)
+
+
+# Pokemon simulation game when running pokemon.py
+# During machine learning team generation and battle simulation will happen independently of battleSim() function
+def main():
+
+    # Generate teams
+    Team1 = generate_team_1()
+    Team2 = generate_team_2()
+
 
     # test print
     #delayPrint("This pokemon AI wants to be the very best, like no one ever was\n")
