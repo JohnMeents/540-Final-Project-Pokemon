@@ -1,4 +1,7 @@
 # John Meents & Daniel Moore
+# TODO
+# fitness funcion
+# function to get the state of the game that returns every relevant variable
 
 import time
 import numpy as np
@@ -62,7 +65,7 @@ def delayPrint(s):
     for c in s:
         sys.stdout.write(c)
         sys.stdout.flush()
-        time.sleep(0.03)  # How fast to print
+        time.sleep(0.01)  # How fast to print
 
 
 # Team Class
@@ -72,7 +75,7 @@ class Team:
         self.Pokemon1 = Pokemon1
         self.Pokemon2 = Pokemon2
         self.Pokemon3 = Pokemon3
-        self.acitvePokemon = Pokemon1
+        self.activePokemon = Pokemon1
         self.hasAvailablePokemon = True
 
 
@@ -91,6 +94,7 @@ class Pokemon:
         self.defense = defense
         self.spdefense = spdefense
         self.speed = speed
+        self.maxHp = hp
         self.ability = ability  # implement last
         self.item = item  # implement last
         self.level = 100  # pokemon are automatically set to level 100
@@ -104,48 +108,205 @@ class Move:
         self.physpc = physpc
         self.basePower = basePower
         self.accuracy = accuracy  # moves with 101 accuracy cannot be lowered
-        self.effect = effect
+        self.effect = effect  # implement last
 
 
-# battle the two teams
+# a function that takes an integer as an action, an int/bool as team and pokemon info
+def fightSim(Team1, Team2, team1Action, team2Action):
+    # if they switch pokemon, that action happens first before the opponent moves
+    # switching Team1 pokemon
+    if(team1Action == 5 or team1Action == 6):
+        if(team1Action == 5 and Team1.Pokemon1.hp > 0 and Team1.activePokemon != Team1.Pokemon1):
+            Team1.activePokemon = Team1.Pokemon1
+        elif(team1Action == 5 and Team1.Pokemon2.hp > 0 and Team1.activePokemon != Team1.Pokemon2):
+            Team1.activePokemon = Team1.Pokemon2
+        elif(team1Action == 5 and Team1.Pokemon3.hp > 0 and Team1.activePokemon != Team1.Pokemon3):
+            Team1.activePokemon = Team1.Pokemon3
+
+        elif(team1Action == 6 and Team1.Pokemon3.hp > 0 and Team1.activePokemon != Team1.Pokemon3):
+            Team1.activePokemon = Team1.Pokemon3
+        elif(team1Action == 6 and Team1.Pokemon2.hp > 0 and Team1.activePokemon != Team1.Pokemon2):
+            Team1.activePokemon = Team1.Pokemon2
+        elif(team1Action == 6 and Team1.Pokemon1.hp > 0 and Team1.activePokemon != Team1.Pokemon1):
+            Team1.activePokemon = Team1.Pokemon1
+        else:
+            pass
+
+    # switching Team2 pokemon
+    if(team2Action == 5 or team2Action == 6):
+        if(team2Action == 5 and Team2.Pokemon1.hp > 0 and Team2.activePokemon != Team2.Pokemon1):
+            Team2.activePokemon = Team2.Pokemon1
+        elif(team2Action == 5 and Team2.Pokemon2.hp > 0 and Team2.activePokemon != Team2.Pokemon2):
+            Team2.activePokemon = Team2.Pokemon2
+        elif(team2Action == 5 and Team2.Pokemon3.hp > 0 and Team2.activePokemon != Team2.Pokemon3):
+            Team2.activePokemon = Team2.Pokemon3
+
+        elif(team2Action == 6 and Team2.Pokemon3.hp > 0 and Team2.activePokemon != Team2.Pokemon3):
+            Team2.activePokemon = Team2.Pokemon3
+        elif(team2Action == 6 and Team2.Pokemon2.hp > 0 and Team2.activePokemon != Team2.Pokemon2):
+            Team2.activePokemon = Team2.Pokemon2
+        elif(team2Action == 6 and Team2.Pokemon1.hp > 0 and Team2.activePokemon != Team2.Pokemon1):
+            Team2.activePokemon = Team2.Pokemon1
+        else:
+            pass
+
+    # if Team1 moves first
+    if(Team1.activePokemon.speed >= Team2.activePokemon.speed):
+        # do calc
+        damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
+        # other pokemon attacks if they didn't just faint
+        if(Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0):
+            damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
+    # if Team2 moves first
+    else:
+        # do calc
+        damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
+        # other pokemon attacks if they didn't just faint
+        if(Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0):
+            damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
+
+    # if a pokemon faints:
+    if(Team1.activePokemon.hp <= 0):
+        delayPrint(Team1.activePokemon.name +
+                   " fainted!\nChoose an available Pokemon!\n")
+    if(Team2.activePokemon.hp <= 0):
+        delayPrint(Team2.activePokemon.name +
+                   " fainted!\nChoose an available Pokemon!\n")
+
+
 def battleSim(Team1, Team2):
+    txt = "default"
+    chooseTeam1Move = ""
+    chooseTeam2Move = ""
     # players start out with a predetermined pokemon1
     # If both teams have usable pokemon: loop:
     while (Team1.hasAvailablePokemon and Team2.hasAvailablePokemon):
         # if both active pokemon have health: loop:
-        while (Team1.acitvePokemon.hp != 0 and Team2.acitvePokemon.hp != 0):
-            # TO DO
-
+        while (Team1.activePokemon.hp >= 0 and Team2.activePokemon.hp >= 0):
             # print out fight info
             delayPrint(Team1.activePokemon.name)
+            delayPrint("\n")
             delayPrint(Team2.activePokemon.name)
-            # moves are chosen
-            # if they swith pokemon, that action happens first before the opponent moves
-            # determine who moves first
-            # do damage calculations for turn
-            # if a pokemon faints:
-            # print pokemonName fainted!
-            # chose an available pokemon
-            # print Go PokemonName!
+            delayPrint("\n")
 
-            # TO DO
-        if (Team1.acitvePokemon.hp == 0 and Team2.acitvePokemon.hp != 0):
-            delayPrint("Enter an integer for a command: ")
-            txt = input()
-        elif (Team1.acitvePokemon.hp != 0 and Team2.acitvePokemon.hp == 0):
-            delayPrint("Enter an integer for a command: ")
-            txt = input()
-        else:
-            print("I don't think both pokemon will faint on the same turn?")
+            validInput1 = False
+            validInput2 = False
+            # moves are chosen for Team 1
+            while(validInput1 == False):
+                delayPrint("Team 1, Enter and integer for the following command\n1: Move 1\n2: Move 2\n3: Move 3\n4: Move 4\n5: Switch to first available pokemon\n6: Switch to second available Pokemon\n")
+                chooseTeam1Move = input()
+                # If they chose 1-4
+                if(chooseTeam1Move == "1" or chooseTeam1Move == "2" or chooseTeam1Move == "3" or chooseTeam1Move == "4"):
+                    validInput1 = True
+                # make sure "5" is a valid input (first benched pokemon)"
+                elif(chooseTeam1Move == "5" and Team1.Pokemon1.hp > 0):
+                    validInput1 = True
+                elif(chooseTeam1Move == "5" and Team1.Pokemon2.hp > 0):
+                    validInput1 = True
+                elif(chooseTeam1Move == "5" and Team1.Pokemon3.hp > 0):
+                    validInput1 = True
+                # make sure "6" is a valid input (second benched pokemon)
+                elif(chooseTeam1Move == "6" and Team1.Pokemon1.hp > 0 and Team1.Pokemon2.hp > 0 and Team1.Pokemon2.hp > 0):
+                    validInput1 = True
+                elif(chooseTeam1Move == "6" and Team1.Pokemon2.hp > 0):
+                    validInput1 = True
+                elif(chooseTeam1Move == "6" and Team1.Pokemon3.hp > 0):
+                    validInput1 = True
+                else:
+                    validInput1 = False  # remains false
 
-    if (Team1.hasAvailablePokemon and (Team2.hasAvailablePokemon == false)):
+            # moves are chosen for Team 2
+            while(validInput2 == False):
+                delayPrint("Team 2, Enter and integer for the following command\n1: Move 1\n2: Move 2\n3: Move 3\n4: Move 4\n5: Switch to first available pokemon\n6: Switch to second available Pokemon\n")
+                chooseTeam2Move = input()
+                # If they choose 1-4
+                if(chooseTeam2Move == "1" or chooseTeam2Move == "2" or chooseTeam2Move == "3" or chooseTeam2Move == "4"):
+                    validInput2 = True
+                # make sure "5" is a valid input (first benched pokemon)"
+                elif(chooseTeam2Move == "5" and Team2.Pokemon1.hp > 0):
+                    validInput2 = True
+                elif(chooseTeam2Move == "5" and Team2.Pokemon2.hp > 0):
+                    validInput2 = True
+                elif(chooseTeam2Move == "5" and Team2.Pokemon3.hp > 0):
+                    validInput2 = True
+                # make sure "6" is a valid input (second benched pokemon)
+                elif(chooseTeam2Move == "6" and Team2.Pokemon1.hp > 0 and Team2.Pokemon2.hp > 0 and Team2.Pokemon2.hp > 0):
+                    validInput2 = True
+                elif(chooseTeam2Move == "6" and Team2.Pokemon2.hp > 0):
+                    validInput2 = True
+                elif(chooseTeam2Move == "6" and Team2.Pokemon3.hp > 0):
+                    validInput2 = True
+                else:
+                    validInput2 = False  # remains false
+
+            # convert move choices from strings to ints
+            chooseTeam1Move = int(chooseTeam1Move)
+            chooseTeam2Move = int(chooseTeam2Move)
+
+            # turn happens
+            fightSim(Team1, Team2, chooseTeam1Move, chooseTeam2Move)
+
+            # check if each team has available pokemon
+            if(Team1.Pokemon1.hp <= 0 and Team1.Pokemon2.hp <= 0 and Team1.Pokemon3.hp <= 0):
+                Team1.hasAvailablePokemon = False
+            if(Team2.Pokemon1.hp <= 0 and Team2.Pokemon2.hp <= 0 and Team2.Pokemon3.hp <= 0):
+                Team2.hasAvailablePokemon = False
+
+            # Set new active Pokemon, INPUT NEEDS TO BE VALIDATED
+            if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
+                delayPrint(
+                    "Enter an integer for a command: 1 for Pokemon1, 2 for Pokemon 2, 3 for Pokemon 3: ")
+                txt = input()
+                if(txt == "1"):
+                    Team1.activePokemon = Team1.Pokemon1
+                elif(txt == "2"):
+                    Team1.activePokemon = Team1.Pokemon2
+                elif(txt == "3"):
+                    Team1.activePokemon = Team1.Pokemon3
+                else:
+                    delayPrint("Error in setting new active pokemon")
+            elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
+                delayPrint(
+                    "Enter an integer for a command: 1 for Pokemon1, 2 for Pokemon 2, 3 for Pokemon 3: ")
+                txt = input()
+                if(txt == "1"):
+                    Team2.activePokemon = Team2.Pokemon1
+                elif(txt == "2"):
+                    Team2.activePokemon = Team2.Pokemon2
+                elif(txt == "3"):
+                    Team2.activePokemon = Team2.Pokemon3
+                else:
+                    delayPrint("Error in setting new active pokemon")
+            else:
+                # I don't think both pokemon will faint on the same turn in this limited simulation,
+                # therefore assume they're both alive
+                pass
+
+    # print winning team
+    if (Team1.hasAvailablePokemon and (Team2.hasAvailablePokemon == False)):
         delayPrint("Team 1 wins!\n")
     else:
         delayPrint("Team 2 wins!\n")
 
 
 def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
-    damage = 0
+    # do nothing if the move is 5 or 6 (a switch)
+    if(move == 5 or move == 6):
+        return
+
+    # temp
+    damage = 100
+    Pokemon2.hp -= damage
+    Pokemon2.healthPercentage = Pokemon2.hp/Pokemon2.maxHp
+    # delayPrint(damage)
+    # delayPrint("\n")
+    delayPrint(Pokemon1.name)
+    delayPrint(" used ")
+    delayPrint(Pokemon1.moves[(move - 1)].moveName)
+    delayPrint("!\n")
+    delayPrint(Pokemon2.name + " has ")
+    print(Pokemon2.healthPercentage)
+    delayPrint(" remaining health\n")
 
     # critical = 1/16th chance it equals 1.5, otherwise it's 1.0
     # random = Random number between 0.85 and 1.0 (inclusive)
@@ -208,10 +369,6 @@ def main():
     Synthesis = Move(
         "Synthesis", pokemon_types[4], "status", None, 101, "Heals the user by 50 percent max hp")
     # ------------------------------------------------------------------------------
-
-    # test print
-    delayPrint("This pokemon AI wants to be the very best, like no one ever was\n")
-
     # create Team1
     pikachuMoves = [Thunderbolt, SignalBeam, NastyPlot, ThunderWave]
     snorlaxMoves = [BodySlam, Rest, Yawn, SleepTalk]
@@ -237,8 +394,10 @@ def main():
     Team2 = Team("Team2", Charizard, Blastoise, Venusaur)
 
     # test print
-    delayPrint(Team1.Pokemon1.ability)
-    delayPrint("\n")
+    #delayPrint("This pokemon AI wants to be the very best, like no one ever was\n")
+
+    # battle the teams
+    battleSim(Team1, Team2)
 
 
 if __name__ == "__main__":
