@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import pokemon
+import random
 
 
 class ReplayBuffer():
@@ -63,6 +64,7 @@ class Agent():
         self.epsilon_decrement = epsilon_decrement
         self.batch_size = batch_size
         self.model_file = fname
+        self.input_dims = input_dims
         self.memory = ReplayBuffer(mem_size, input_dims)
         self.q_eval = build_dqn(learn_rate, n_actions, input_dims)
 
@@ -106,7 +108,8 @@ class Agent():
         self.q_eval.save(self.model_file)
 
     def load_model(self):
-        self.q_eval.load_weights(self.model_file)
+        self.q_eval = tf.keras.models.load_model(self.model_file)
+        #self.q_eval.load_weights(self.model_file)
 
 
 # ---------- Constants ----------
@@ -134,12 +137,15 @@ def play():
     Team2 = pokemon.generate_team_2()
 
     # Load the AI
-    model_loaded = Agent(gamma=0.99, epsilon=0.1, learn_rate=learning_rate,
+    fname = 'model_a.h5' if player_a else 'model_b.h5'
+    print('Loading saved model...')
+    agent = Agent(gamma=0.99, epsilon=0.1, learn_rate=learning_rate,
                     input_dims=space_size, n_actions=action_size,
-                    mem_size=1000000, batch_size=64, epsilon_end=0.01,
-                       fname=('model_a.h5' if player_a else 'model_b.h5'))
+                    mem_size=1000000, batch_size=64, epsilon_end=0.01, fname='model_a.h5')
+    agent.load_model()
+
     # battle the teams
-    pokemon.battleSim(Team1, Team2, ai=model_loaded, ai_is_a=player_a)
+    pokemon.battleSim(Team1, Team2, ai=agent, ai_is_a=player_a)
 
 def train():
     # Create a model
