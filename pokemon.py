@@ -220,18 +220,51 @@ def fightSim(Team1, Team2, team1Action, team2Action, headless = False):
     # if a pokemon faints:
     if(Team1.activePokemon.hp <= 0):
         Team1.reward -= 20
-        if (not headless):
-            delayPrint(Team1.activePokemon.name +
-                       " fainted!\nChoose an available Pokemon!\n")
+        if (True):
+            print(Team1.activePokemon.name +
+                       " fainted!")
 
     if(Team2.activePokemon.hp <= 0):
         Team2.reward -= 20
-        if(not headless):
-            delayPrint(Team2.activePokemon.name +
-                       " fainted!\nChoose an available Pokemon!\n")
+        if(True):
+            print(Team2.activePokemon.name +
+                       " fainted!")
 
-    Team1.reward -= Team1.roundNumber / 2
-    Team2.reward -= Team2.roundNumber / 2
+    if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
+        # Automatically pick a Pokemon for Team 1
+        if Team1.Pokemon1.hp > 0:
+            Team1.activePokemon = Team1.Pokemon1
+            Team1.activePokemonN = 1
+        elif Team1.Pokemon2.hp > 0:
+            Team1.activePokemon = Team1.Pokemon2
+            Team1.activePokemonN = 2
+        elif Team1.Pokemon3.hp > 0:
+            Team1.activePokemon = Team1.Pokemon3
+            Team1.activePokemonN = 3
+        else:
+            # All pokemon are fainted, this shouldn't happen from the above check
+            pass
+    elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
+        # Automatically pick a Pokemon for Team 2
+        if Team2.Pokemon1.hp > 0:
+            Team2.activePokemon = Team2.Pokemon1
+            Team2.activePokemonN = 1
+        elif Team2.Pokemon2.hp > 0:
+            Team2.activePokemon = Team2.Pokemon2
+            Team2.activePokemonN = 2
+        elif Team2.Pokemon3.hp > 0:
+            Team2.activePokemon = Team2.Pokemon3
+            Team2.activePokemonN = 3
+        else:
+            # All pokemon are fainted, this shouldn't happen from the above check
+            pass
+    else:
+        # I don't think both pokemon will faint on the same turn in this limited simulation,
+        # therefore assume they're both alive
+        pass
+
+    Team1.reward -= Team1.roundNumber / 10
+    Team2.reward -= Team2.roundNumber / 10
 
     Team1.roundNumber += 1
     Team2.roundNumber += 1
@@ -320,57 +353,24 @@ def battleSim(Team1, Team2):
             if(Team2.Pokemon1.hp <= 0 and Team2.Pokemon2.hp <= 0 and Team2.Pokemon3.hp <= 0):
                 Team2.hasAvailablePokemon = False
 
-            # Set new active Pokemon, INPUT NEEDS TO BE VALIDATED
-            if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
-                delayPrint(
-                    "Enter an integer for a command: 1 for Pokemon1, 2 for Pokemon 2, 3 for Pokemon 3: ")
-                txt = input()
-                if(txt == "1"):
-                    Team1.activePokemon = Team1.Pokemon1
-                    Team1.activePokemonN = 1
-                elif(txt == "2"):
-                    Team1.activePokemon = Team1.Pokemon2
-                    Team1.activePokemonN = 2
-                elif(txt == "3"):
-                    Team1.activePokemon = Team1.Pokemon3
-                    Team1.activePokemonN = 3
-                else:
-                    delayPrint("Error in setting new active pokemon")
-            elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
-                delayPrint(
-                    "Enter an integer for a command: 1 for Pokemon1, 2 for Pokemon 2, 3 for Pokemon 3: ")
-                txt = input()
-                if(txt == "1"):
-                    Team2.activePokemon = Team2.Pokemon1
-                    Team2.activePokemonN = 1
-                elif(txt == "2"):
-                    Team2.activePokemon = Team2.Pokemon2
-                    Team2.activePokemonN = 2
-                elif(txt == "3"):
-                    Team2.activePokemon = Team2.Pokemon3
-                    Team2.activePokemonN = 3
-                else:
-                    delayPrint("Error in setting new active pokemon")
-            else:
-                # I don't think both pokemon will faint on the same turn in this limited simulation,
-                # therefore assume they're both alive
-                pass
 
     # print winning team
-    if (Team1.hasAvailablePokemon and (Team2.hasAvailablePokemon == False)):
+    if (Team1.hasAvailablePokemon and (Team2.hasAvailablePokemon is False)):
         delayPrint("Team 1 wins!\n")
     else:
         delayPrint("Team 2 wins!\n")
 
 def isGameOver(team1: Team, team2: Team):
-    return not team1.hasAvailablePokemon or not team2.hasAvailablePokemon
+    return (team1.hasAvailablePokemon is False or team2.hasAvailablePokemon is False) \
+           or (team1.hasAvailablePokemon and team2.hasAvailablePokemon is False) \
+           or (team2.hasAvailablePokemon and team1.hasAvailablePokemon is False)
 
 
 # Perform a step in the game simulation. This is primarily used by the AI
-def step(team1: Team, team2: Team, team1_action, team2_action):
+def step(team1: Team, team2: Team, team1_action, team2_action, headless=True):
 
     # Perform the turn/round
-    fightSim(team1, team2, team1_action, team2_action, headless=True)
+    fightSim(team1, team2, team1_action, team2_action, headless=headless)
 
     # Determine observation, or new state space
     observation = getState(team1, team2)

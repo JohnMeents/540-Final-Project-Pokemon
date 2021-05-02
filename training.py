@@ -163,7 +163,9 @@ def main():
 			if current_turn > max_turns:
 				done = True
 
-			print('Game', current_game, 'turn', current_turn, 'for training on player', 'A' if train_a else 'B', ':', reward, ':', new_observation)
+			print('Game', current_game, 'turn', current_turn, 'for training on player', 'A' if train_a else 'B', \
+				  ':', reward, ': active', [team_a.activePokemonN, team_b.activePokemonN], \
+				  ': hasAvailable', [team_a.hasAvailablePokemon, team_b.hasAvailablePokemon], ': activeHp', [format(team_a.activePokemon.healthPercentage, '.0%'), format(team_b.activePokemon.healthPercentage, '.0%')])
 			score_a += reward[0]
 			score_b += reward[1]
 
