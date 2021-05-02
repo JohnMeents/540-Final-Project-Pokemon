@@ -84,6 +84,8 @@ class Team:
         self.activePokemon = Pokemon1
         self.activePokemonN = 1
         self.hasAvailablePokemon = True
+        self.reward = 0
+        self.roundNumber = 0
 
     # Returns an array that represents parameters about this object
     def toArray(self):
@@ -144,7 +146,9 @@ class Move:
 
 
 # a function that takes an integer as an action, an int/bool as team and pokemon info
-def fightSim(Team1, Team2, team1Action, team2Action):
+def fightSim(Team1, Team2, team1Action, team2Action, headless = False):
+    Team1.reward = 0
+    Team2.reward = 0
     # if they switch pokemon, that action happens first before the opponent moves
     # switching Team1 pokemon
     if(team1Action == 5 or team1Action == 6):
@@ -197,25 +201,40 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     # if Team1 moves first
     if(Team1.activePokemon.speed >= Team2.activePokemon.speed):
         # do calc
-        damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
+        damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action, headless=headless)
+        Team1.reward += 3
         # other pokemon attacks if they didn't just faint
         if(Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0):
-            damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
+            damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action, headless=headless)
+            Team2.reward += 3
     # if Team2 moves first
     else:
         # do calc
-        damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
+        damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action, headless=headless)
+        Team2.reward += 3
         # other pokemon attacks if they didn't just faint
         if(Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0):
-            damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
+            damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action, headless=headless)
+            Team1.reward += 3
 
     # if a pokemon faints:
     if(Team1.activePokemon.hp <= 0):
-        delayPrint(Team1.activePokemon.name +
-                   " fainted!\nChoose an available Pokemon!\n")
+        Team1.reward -= 20
+        if (not headless):
+            delayPrint(Team1.activePokemon.name +
+                       " fainted!\nChoose an available Pokemon!\n")
+
     if(Team2.activePokemon.hp <= 0):
-        delayPrint(Team2.activePokemon.name +
-                   " fainted!\nChoose an available Pokemon!\n")
+        Team2.reward -= 20
+        if(not headless):
+            delayPrint(Team2.activePokemon.name +
+                       " fainted!\nChoose an available Pokemon!\n")
+
+    Team1.reward -= Team1.roundNumber / 2
+    Team2.reward -= Team2.roundNumber / 2
+
+    Team1.roundNumber += 1
+    Team2.roundNumber += 1
 
 
 # Returns an array of parameters
@@ -349,18 +368,15 @@ def isGameOver(team1: Team, team2: Team):
 
 # Perform a step in the game simulation. This is primarily used by the AI
 def step(team1: Team, team2: Team, team1_action, team2_action):
-    # TODO: Store observation before performing move and compare? OR store rewards in class? Latter may be less performance heavy
-    # ...
 
     # Perform the turn/round
-    fightSim(team1, team2, team1_action, team2_action)
+    fightSim(team1, team2, team1_action, team2_action, headless=True)
 
     # Determine observation, or new state space
     observation = getState(team1, team2)
 
-    # TODO: Determine rewards for each team
-    reward_a = 0
-    reward_b = 0
+    reward_a = team1.reward
+    reward_b = team2.reward
 
     # Determine if game (episode) is over
     gameOver = isGameOver(team1, team2)
@@ -370,7 +386,7 @@ def step(team1: Team, team2: Team, team1_action, team2_action):
     return observation, [reward_a, reward_b], gameOver
 
 
-def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
+def damageCalc(Pokemon1, Pokemon2, move, headless = False):  # damage calculation function
     # do nothing if the move is 5 or 6 (a switch)
     if(move == 5 or move == 6):
         return
@@ -381,13 +397,14 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
     Pokemon2.healthPercentage = Pokemon2.hp/Pokemon2.maxHp
     # delayPrint(damage)
     # delayPrint("\n")
-    delayPrint(Pokemon1.name)
-    delayPrint(" used ")
-    delayPrint(Pokemon1.moves[(move - 1)].moveName)
-    delayPrint("!\n")
-    delayPrint(Pokemon2.name + " has ")
-    print(Pokemon2.healthPercentage)
-    delayPrint(" remaining health\n")
+    if not headless:
+        delayPrint(Pokemon1.name)
+        delayPrint(" used ")
+        delayPrint(Pokemon1.moves[(move - 1)].moveName)
+        delayPrint("!\n")
+        delayPrint(Pokemon2.name + " has ")
+        print(Pokemon2.healthPercentage)
+        delayPrint(" remaining health\n")
 
     # critical = 1/16th chance it equals 1.5, otherwise it's 1.0
     # random = Random number between 0.85 and 1.0 (inclusive)
