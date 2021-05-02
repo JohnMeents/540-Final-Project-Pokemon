@@ -106,11 +106,7 @@ class Agent():
 # ---------- Constants ----------
 learning_rate = 0.001
 num_games = 500 # Number of full games to simulate
-switch_steps = 10000 # Switch sides after n steps in the training process
-max_steps = 10000000 # Maximum number of iterations to perform training
-
-reward_game_win = 1000 # Reward when the AI wins a game
-reward_game_loss = -1000 # Reward when the AI loses a game
+switch_games = 20 # Switch who trains after n games
 
 space_size = 154 # Number of parameters in the observation space
 action_size = 6 # Number of actions that can be performed by the player
@@ -152,10 +148,6 @@ def main():
 		team_b = pokemon.generate_team_2()
 
 		observation = pokemon.getState(team_a, team_b)
-		print(observation)
-
-		# Store how many steps player A/B has made since they started being the one training
-		current_switch_step = 0
 
 		while not done:
 			# Choose actions for both teams
@@ -164,6 +156,7 @@ def main():
 			action_b = model_b.choose_action(observation)
 
 			new_observation, reward, done = pokemon.step(team_a, team_b, action_a, action_b)
+			# print(new_observation)
 
 			score_a += reward[0]
 			score_b += reward[1]
@@ -175,19 +168,16 @@ def main():
 			model_a.learn() if train_a else model_b.learn()
 
 		# Increment or reset switch_step
-		if current_switch_step == switch_steps:
-			current_switch_step = 0
+		if current_game % switch_games == 0:
 			print("Switching training from player", "A" if train_a else "B", "to player", "B" if train_a else "A")
 			# Perform switch so that the opponent begins training
 			switch_training()
-		else:
-			current_switch_step += 1
 
 		epsilon_history.append(model_a.epsilon if train_a else model_b.epsilon)
 		scores.append([score_a, score_b])
 
-		avg_score = np.mean(scores[-50:][int(not train_a)])
-		print('Episode: ', current_game, 'Score %.2f' % score_a if train_a else score_b,
+		avg_score = np.mean(scores[-50:])
+		print('Episode: ', current_game, 'Score %.2f' % (score_a if train_a else score_b),
 			  'average_score %.2f' % avg_score,
 			  'epsilon %.2f' % model_a.epsilon if train_a else model_b.epsilon)
 

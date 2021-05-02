@@ -170,29 +170,23 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     # if they switch pokemon, that action happens first before the opponent moves
     # switching Team1 pokemon
     if team1Action == 5 or team1Action == 6:
-        if (team1Action == 5 and Team1.Pokemon1.hp > 0
-                and Team1.activePokemon != Team1.Pokemon1):
+        if (team1Action == 5 and Team1.Pokemon1.hp > 0 and Team1.activePokemon != Team1.Pokemon1):
             Team1.activePokemon = Team1.Pokemon1
             Team1.activePokemonN = 1
-        elif (team1Action == 5 and Team1.Pokemon2.hp > 0
-              and Team1.activePokemon != Team1.Pokemon2):
+        elif (team1Action == 5 and Team1.Pokemon2.hp > 0 and Team1.activePokemon != Team1.Pokemon2):
             Team1.activePokemon = Team1.Pokemon2
             Team1.activePokemonN = 2
-        elif (team1Action == 5 and Team1.Pokemon3.hp > 0
-              and Team1.activePokemon != Team1.Pokemon3):
+        elif (team1Action == 5 and Team1.Pokemon3.hp > 0 and Team1.activePokemon != Team1.Pokemon3):
             Team1.activePokemon = Team1.Pokemon3
             Team1.activePokemonN = 3
 
-        elif (team1Action == 6 and Team1.Pokemon3.hp > 0
-              and Team1.activePokemon != Team1.Pokemon3):
+        elif (team1Action == 6 and Team1.Pokemon3.hp > 0 and Team1.activePokemon != Team1.Pokemon3):
             Team1.activePokemon = Team1.Pokemon3
             Team1.activePokemonN = 3
-        elif (team1Action == 6 and Team1.Pokemon2.hp > 0
-              and Team1.activePokemon != Team1.Pokemon2):
+        elif (team1Action == 6 and Team1.Pokemon2.hp > 0 and Team1.activePokemon != Team1.Pokemon2):
             Team1.activePokemon = Team1.Pokemon2
             Team1.activePokemonN = 2
-        elif (team1Action == 6 and Team1.Pokemon1.hp > 0
-              and Team1.activePokemon != Team1.Pokemon1):
+        elif (team1Action == 6 and Team1.Pokemon1.hp > 0 and Team1.activePokemon != Team1.Pokemon1):
             Team1.activePokemon = Team1.Pokemon1
             Team1.activePokemonN = 1
         else:
@@ -200,29 +194,23 @@ def fightSim(Team1, Team2, team1Action, team2Action):
 
     # switching Team2 pokemon
     if team2Action == 5 or team2Action == 6:
-        if (team2Action == 5 and Team2.Pokemon1.hp > 0
-                and Team2.activePokemon != Team2.Pokemon1):
+        if (team2Action == 5 and Team2.Pokemon1.hp > 0 and Team2.activePokemon != Team2.Pokemon1):
             Team2.activePokemon = Team2.Pokemon1
             Team2.activePokemonN = 1
-        elif (team2Action == 5 and Team2.Pokemon2.hp > 0
-              and Team2.activePokemon != Team2.Pokemon2):
+        elif (team2Action == 5 and Team2.Pokemon2.hp > 0 and Team2.activePokemon != Team2.Pokemon2):
             Team2.activePokemon = Team2.Pokemon2
             Team2.activePokemonN = 2
-        elif (team2Action == 5 and Team2.Pokemon3.hp > 0
-              and Team2.activePokemon != Team2.Pokemon3):
+        elif (team2Action == 5 and Team2.Pokemon3.hp > 0 and Team2.activePokemon != Team2.Pokemon3):
             Team2.activePokemon = Team2.Pokemon3
             Team2.activePokemonN = 3
 
-        elif (team2Action == 6 and Team2.Pokemon3.hp > 0
-              and Team2.activePokemon != Team2.Pokemon3):
+        elif (team2Action == 6 and Team2.Pokemon3.hp > 0 and Team2.activePokemon != Team2.Pokemon3):
             Team2.activePokemon = Team2.Pokemon3
             Team2.activePokemonN = 3
-        elif (team2Action == 6 and Team2.Pokemon2.hp > 0
-              and Team2.activePokemon != Team2.Pokemon2):
+        elif (team2Action == 6 and Team2.Pokemon2.hp > 0 and Team2.activePokemon != Team2.Pokemon2):
             Team2.activePokemon = Team2.Pokemon2
             Team2.activePokemonN = 2
-        elif (team2Action == 6 and Team2.Pokemon1.hp > 0
-              and Team2.activePokemon != Team2.Pokemon1):
+        elif (team2Action == 6 and Team2.Pokemon1.hp > 0 and Team2.activePokemon != Team2.Pokemon1):
             Team2.activePokemon = Team2.Pokemon1
             Team2.activePokemonN = 1
         else:
@@ -232,20 +220,20 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     if Team1.activePokemon.speed >= Team2.activePokemon.speed:
         # do calc
         damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
-        Team1.reward += 3
+        Team1.reward += 10
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
             damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
-            Team2.reward += 3
+            Team2.reward += 10
         # if Team2 moves first
     else:
         # do calc
         damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
-        Team2.reward += 3
+        Team2.reward += 10
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
             damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
-            Team1.reward += 3
+            Team1.reward += 10
 
     # Automatically pick an available Pokemon if one of the teams' active pokemon fainted
     if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
@@ -283,8 +271,14 @@ def fightSim(Team1, Team2, team1Action, team2Action):
         # therefore assume they're both alive
         pass
 
-    Team1.reward -= Team1.roundNumber / 10
-    Team2.reward -= Team2.roundNumber / 10
+    # check if each team has available pokemon
+    if (Team1.Pokemon1.hp <= 0 and Team1.Pokemon2.hp <= 0 and Team1.Pokemon3.hp <= 0):
+        Team1.hasAvailablePokemon = False
+    if (Team2.Pokemon1.hp <= 0 and Team2.Pokemon2.hp <= 0 and Team2.Pokemon3.hp <= 0):
+        Team2.hasAvailablePokemon = False
+
+    Team1.reward -= int(Team1.roundNumber / 10)
+    Team2.reward -= int(Team2.roundNumber / 10)
 
     Team1.roundNumber += 1
     Team2.roundNumber += 1
@@ -405,14 +399,6 @@ def battleSim(Team1, Team2):
                 delayPrint(Team2.activePokemon.name +
                            " fainted!\n")
 
-            # check if each team has available pokemon
-            if (Team1.Pokemon1.hp <= 0 and Team1.Pokemon2.hp <= 0
-                    and Team1.Pokemon3.hp <= 0):
-                Team1.hasAvailablePokemon = False
-            if (Team2.Pokemon1.hp <= 0 and Team2.Pokemon2.hp <= 0
-                    and Team2.Pokemon3.hp <= 0):
-                Team2.hasAvailablePokemon = False
-
     # print winning team
     if Team1.hasAvailablePokemon and (Team2.hasAvailablePokemon == False):
         delayPrint("Team 1 wins!\n")
@@ -440,7 +426,6 @@ def step(team1: Team, team2: Team, team1_action, team2_action):
     gameOver = isGameOver(team1, team2)
 
     # Return observation, rewards, gameOver
-    # TODO: Is there any other info the AI needs?
     return observation, [reward_a, reward_b], gameOver
 
 
