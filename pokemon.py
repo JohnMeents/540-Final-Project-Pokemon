@@ -190,6 +190,9 @@ def fightSim(Team1, Team2, team1Action, team2Action):
             Team1.activePokemon = Team1.Pokemon1
             Team1.activePokemonN = 1
         else:
+            # Attempt to select a Pokemon that has fainted
+            # Negatively impact the team's reward to discourage AI from attempting to switch to an invalid Pokemon
+            Team1.reward -= 10
             pass
 
     # switching Team2 pokemon
@@ -214,6 +217,9 @@ def fightSim(Team1, Team2, team1Action, team2Action):
             Team2.activePokemon = Team2.Pokemon1
             Team2.activePokemonN = 1
         else:
+            # Attempt to select a Pokemon that has fainted
+            # Negatively impact the team's reward to discourage AI from attempting to switch to an invalid Pokemon
+            Team2.reward -= 10
             pass
 
     # if Team1 moves first
@@ -225,7 +231,7 @@ def fightSim(Team1, Team2, team1Action, team2Action):
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
             damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
             Team2.reward += 10
-        # if Team2 moves first
+    # if Team2 moves first
     else:
         # do calc
         damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
@@ -237,7 +243,8 @@ def fightSim(Team1, Team2, team1Action, team2Action):
 
     # Automatically pick an available Pokemon if one of the teams' active pokemon fainted
     if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
-        Team1.reward -= 20
+        # A Pokemon has fainted, punish the team
+        Team1.reward -= 15
         # Automatically pick a Pokemon for Team 1
         if Team1.Pokemon1.hp > 0:
             Team1.activePokemon = Team1.Pokemon1
@@ -252,7 +259,8 @@ def fightSim(Team1, Team2, team1Action, team2Action):
             # All pokemon are fainted, this shouldn't happen from the above check
             pass
     elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
-        Team2.reward -= 20
+        # A Pokemon has fainted, punish the team
+        Team2.reward -= 15
         # Automatically pick a Pokemon for Team 2
         if Team2.Pokemon1.hp > 0:
             Team2.activePokemon = Team2.Pokemon1
@@ -274,11 +282,18 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     # check if each team has available pokemon
     if (Team1.Pokemon1.hp <= 0 and Team1.Pokemon2.hp <= 0 and Team1.Pokemon3.hp <= 0):
         Team1.hasAvailablePokemon = False
+        # Team1 lost, punish the AI
+        Team1.reward -= 50
+        Team2.reward += 50
     if (Team2.Pokemon1.hp <= 0 and Team2.Pokemon2.hp <= 0 and Team2.Pokemon3.hp <= 0):
+        # Team2 lost, punish the AI
+        Team2.reward -= 50
+        Team1.reward += 50
         Team2.hasAvailablePokemon = False
 
-    Team1.reward -= int(Team1.roundNumber / 10)
-    Team2.reward -= int(Team2.roundNumber / 10)
+    # Discourage the AI from playing long games by linearly increasing a punishment
+    Team1.reward -= int(Team1.roundNumber / 5)
+    Team2.reward -= int(Team2.roundNumber / 5)
 
     Team1.roundNumber += 1
     Team2.roundNumber += 1
@@ -289,7 +304,7 @@ def getState(team1: Team, team2: Team):
     return team1.toArray() + team2.toArray()
 
 
-def battleSim(Team1, Team2):
+def battleSim(Team1, Team2, ai=None, ai_is_a=True):
     txt = "default"
     chooseTeam1Move = ""
     chooseTeam2Move = ""
@@ -304,63 +319,73 @@ def battleSim(Team1, Team2):
             delayPrint(Team2.activePokemon.name)
             delayPrint("\n")
 
-            validInput1 = False
-            validInput2 = False
-            # moves are chosen for Team 1
-            while validInput1 == False:
-                delayPrint(
-                    "Team 1, Enter and integer for the following command\n1: Move 1\n2: Move 2\n3: Move 3\n4: Move 4\n5: Switch to first available pokemon\n6: Switch to second available Pokemon\n"
-                )
-                chooseTeam1Move = input()
-                # If they chose 1-4
-                if (chooseTeam1Move == "1" or chooseTeam1Move == "2"
-                        or chooseTeam1Move == "3" or chooseTeam1Move == "4"):
-                    validInput1 = True
-                # make sure "5" is a valid input (first benched pokemon)"
-                elif chooseTeam1Move == "5" and Team1.Pokemon1.hp > 0:
-                    validInput1 = True
-                elif chooseTeam1Move == "5" and Team1.Pokemon2.hp > 0:
-                    validInput1 = True
-                elif chooseTeam1Move == "5" and Team1.Pokemon3.hp > 0:
-                    validInput1 = True
-                # make sure "6" is a valid input (second benched pokemon)
-                elif (chooseTeam1Move == "6" and Team1.Pokemon1.hp > 0
-                      and Team1.Pokemon2.hp > 0 and Team1.Pokemon2.hp > 0):
-                    validInput1 = True
-                elif chooseTeam1Move == "6" and Team1.Pokemon2.hp > 0:
-                    validInput1 = True
-                elif chooseTeam1Move == "6" and Team1.Pokemon3.hp > 0:
-                    validInput1 = True
-                else:
-                    validInput1 = False  # remains false
+            if ai is not None and ai_is_a:
+                # Playing against AI, and AI is player 1
+                chooseTeam1Move = ai.choose_action(getState(Team1, Team2))
+                delayPrint('[AI chose %i]' % chooseTeam1Move)
+            else:
+                validInput1 = False
+                # moves are chosen for Team 1
+                while validInput1 == False:
+                    delayPrint(
+                        "Team 1, Enter and integer for the following command\n1: Move 1\n2: Move 2\n3: Move 3\n4: Move 4\n5: Switch to first available pokemon\n6: Switch to second available Pokemon\n"
+                    )
+                    chooseTeam1Move = input()
+                    # If they chose 1-4
+                    if (chooseTeam1Move == "1" or chooseTeam1Move == "2"
+                            or chooseTeam1Move == "3" or chooseTeam1Move == "4"):
+                        validInput1 = True
+                    # make sure "5" is a valid input (first benched pokemon)"
+                    elif chooseTeam1Move == "5" and Team1.Pokemon1.hp > 0:
+                        validInput1 = True
+                    elif chooseTeam1Move == "5" and Team1.Pokemon2.hp > 0:
+                        validInput1 = True
+                    elif chooseTeam1Move == "5" and Team1.Pokemon3.hp > 0:
+                        validInput1 = True
+                    # make sure "6" is a valid input (second benched pokemon)
+                    elif (chooseTeam1Move == "6" and Team1.Pokemon1.hp > 0
+                          and Team1.Pokemon2.hp > 0 and Team1.Pokemon2.hp > 0):
+                        validInput1 = True
+                    elif chooseTeam1Move == "6" and Team1.Pokemon2.hp > 0:
+                        validInput1 = True
+                    elif chooseTeam1Move == "6" and Team1.Pokemon3.hp > 0:
+                        validInput1 = True
+                    else:
+                        validInput1 = False  # remains false
 
-            # moves are chosen for Team 2
-            while validInput2 == False:
-                delayPrint(
-                    "Team 2, Enter and integer for the following command\n1: Move 1\n2: Move 2\n3: Move 3\n4: Move 4\n5: Switch to first available pokemon\n6: Switch to second available Pokemon\n"
-                )
-                chooseTeam2Move = input()
-                # If they choose 1-4
-                if (chooseTeam2Move == "1" or chooseTeam2Move == "2"
-                        or chooseTeam2Move == "3" or chooseTeam2Move == "4"):
-                    validInput2 = True
-                # make sure "5" is a valid input (first benched pokemon)"
-                elif chooseTeam2Move == "5" and Team2.Pokemon1.hp > 0:
-                    validInput2 = True
-                elif chooseTeam2Move == "5" and Team2.Pokemon2.hp > 0:
-                    validInput2 = True
-                elif chooseTeam2Move == "5" and Team2.Pokemon3.hp > 0:
-                    validInput2 = True
-                # make sure "6" is a valid input (second benched pokemon)
-                elif (chooseTeam2Move == "6" and Team2.Pokemon1.hp > 0
-                      and Team2.Pokemon2.hp > 0 and Team2.Pokemon2.hp > 0):
-                    validInput2 = True
-                elif chooseTeam2Move == "6" and Team2.Pokemon2.hp > 0:
-                    validInput2 = True
-                elif chooseTeam2Move == "6" and Team2.Pokemon3.hp > 0:
-                    validInput2 = True
-                else:
-                    validInput2 = False  # remains false
+            if ai is not None and not ai_is_a:
+                # Playing against AI and AI is Player 2
+                chooseTeam2Move = ai.choose_action(getState(Team1, Team2))
+                delayPrint('[AI chose %i]' % chooseTeam2Move)
+            else:
+                validInput2 = False
+                # moves are chosen for Team 2
+                while validInput2 == False:
+                    delayPrint(
+                        "Team 2, Enter and integer for the following command\n1: Move 1\n2: Move 2\n3: Move 3\n4: Move 4\n5: Switch to first available pokemon\n6: Switch to second available Pokemon\n"
+                    )
+                    chooseTeam2Move = input()
+                    # If they choose 1-4
+                    if (chooseTeam2Move == "1" or chooseTeam2Move == "2"
+                            or chooseTeam2Move == "3" or chooseTeam2Move == "4"):
+                        validInput2 = True
+                    # make sure "5" is a valid input (first benched pokemon)"
+                    elif chooseTeam2Move == "5" and Team2.Pokemon1.hp > 0:
+                        validInput2 = True
+                    elif chooseTeam2Move == "5" and Team2.Pokemon2.hp > 0:
+                        validInput2 = True
+                    elif chooseTeam2Move == "5" and Team2.Pokemon3.hp > 0:
+                        validInput2 = True
+                    # make sure "6" is a valid input (second benched pokemon)
+                    elif (chooseTeam2Move == "6" and Team2.Pokemon1.hp > 0
+                          and Team2.Pokemon2.hp > 0 and Team2.Pokemon2.hp > 0):
+                        validInput2 = True
+                    elif chooseTeam2Move == "6" and Team2.Pokemon2.hp > 0:
+                        validInput2 = True
+                    elif chooseTeam2Move == "6" and Team2.Pokemon3.hp > 0:
+                        validInput2 = True
+                    else:
+                        validInput2 = False  # remains false
 
             # convert move choices from strings to ints
             chooseTeam1Move = int(chooseTeam1Move)

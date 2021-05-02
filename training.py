@@ -38,10 +38,11 @@ class ReplayBuffer():
         return states, actions, rewards, new_states, terminal
 
 
-def build_dqn(learn_rate, n_actions, input_dims, fc1_dims, fc2_dims):
+def build_dqn(learn_rate, n_actions, input_dims):
     model = tf.keras.Sequential([
-        tf.keras.layers.Dense(fc1_dims, activation='relu'),
-        tf.keras.layers.Dense(fc2_dims, activation='relu'),
+        tf.keras.layers.Dense(256, activation='relu'),
+        tf.keras.layers.Dense(256, activation='relu'),
+        tf.keras.layers.Dense(128, activation='relu'),
         tf.keras.layers.Dense(n_actions, activation=None)])
 
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learn_rate),
@@ -52,7 +53,7 @@ def build_dqn(learn_rate, n_actions, input_dims, fc1_dims, fc2_dims):
 
 class Agent():
     def __init__(self, learn_rate, gamma, n_actions, epsilon, batch_size, input_dims, epsilon_decrement=0.001,
-                 epsilon_end=0.01, mem_size=1000000, fname='dqn_model.h5'):
+                 epsilon_end=0.01, mem_size=1000000, fname='model.h5'):
         self.action_space = [i for i in range(n_actions)]
         self.learn_rate = learn_rate
         self.gamma = gamma
@@ -63,7 +64,7 @@ class Agent():
         self.batch_size = batch_size
         self.model_file = fname
         self.memory = ReplayBuffer(mem_size, input_dims)
-        self.q_eval = build_dqn(learn_rate, n_actions, input_dims, 256, 256)
+        self.q_eval = build_dqn(learn_rate, n_actions, input_dims)
 
     def store_transition(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
@@ -101,37 +102,53 @@ class Agent():
             self.epsilon = self.epsilon_min
 
     def save_model(self):
-        raise Exception("Not yet implemented")
+        #raise Exception("Not yet implemented")
+        self.q_eval.save(self.model_file)
 
     def load_model(self):
-        raise Exception("Not yet implemented")
+        self.q_eval.load_weights(self.model_file)
 
 
 # ---------- Constants ----------
 learning_rate = 0.001
-num_games = 500  # Number of full games to simulate
-switch_games = 20  # Switch who trains after n games
+num_games = 200  # Number of full games to simulate
+switch_games = 25  # Switch who trains after n games
 
 space_size = 154  # Number of parameters in the observation space
 action_size = 6  # Number of actions that can be performed by the player
 
 # ---------- Global variables ----------
-train_a = True  # Set to True if player A is the one that's currently training
-
+train_a = False  # Set to True if player A is the one that's currently training
+play_ai = True # Set to True if you should verse the AI instead of training
+player_a = True # Play as Player A (Otherwise, Player B)
 
 def switch_training():
     global train_a
     train_a = not train_a
 
+def play():
+    print('Playing against the AI as player', ('A' if player_a else 'B'))
+    # Play the game, let the simulation know that it's going to get input from the AI
+    # Generate teams
+    Team1 = pokemon.generate_team_1()
+    Team2 = pokemon.generate_team_2()
 
-def main():
+    # Load the AI
+    model_loaded = Agent(gamma=0.99, epsilon=0.1, learn_rate=learning_rate,
+                    input_dims=space_size, n_actions=action_size,
+                    mem_size=1000000, batch_size=64, epsilon_end=0.01,
+                       fname=('model_a.h5' if player_a else 'model_b.h5'))
+    # battle the teams
+    pokemon.battleSim(Team1, Team2, ai=model_loaded, ai_is_a=player_a)
+
+def train():
     # Create a model
     model_a = Agent(gamma=0.99, epsilon=0.1, learn_rate=learning_rate,
                     input_dims=space_size, n_actions=action_size,
-                    mem_size=1000000, batch_size=64, epsilon_end=0.01)
+                    mem_size=1000000, batch_size=64, epsilon_end=0.01, fname='model_a.h5')
     model_b = Agent(gamma=0.99, epsilon=0.1, learn_rate=learning_rate,
                     input_dims=space_size, n_actions=action_size,
-                    mem_size=1000000, batch_size=64, epsilon_end=0.01)
+                    mem_size=1000000, batch_size=64, epsilon_end=0.01, fname='model_b.h5')
 
     scores = []
     epsilon_history = []
@@ -155,7 +172,6 @@ def main():
 
         while not done:
             # Choose actions for both teams
-            # TODO: This looks kinda sloppy
             action_a = model_a.choose_action(observation)
             action_b = model_b.choose_action(observation)
 
@@ -184,10 +200,19 @@ def main():
         _score = score_a if train_a else score_b
         _epsilon = model_a.epsilon if train_a else model_b.epsilon
 
-        print('[Episode %i]' % current_game, '[Training %c]' % ('A' if train_a else 'B'), '[Score %.2f]' % _score,
+        print('[Episode %i/%i]' % (current_game, num_games),
+              '[Training %c]' % ('A' if train_a else 'B'),
+              '[%c Win]' % ('A' if team_a.hasAvailablePokemon else 'B'),
+              '[Score %.2f]' % _score,
               '[average_score %.2f]' % avg_score,
               '[epsilon %.2f]' % _epsilon)
 
+    model_a.save_model()
+    model_b.save_model()
+
 
 if __name__ == '__main__':
-    main()
+    if not play_ai:
+        train()
+    else:
+        play()
