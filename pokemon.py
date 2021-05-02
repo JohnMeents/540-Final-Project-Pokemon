@@ -8,58 +8,20 @@ import random
 import numpy as np
 import sys
 
+
 # -------------------------------------Global Data--------------------------------------
-pokemon_types = [
-    "Normal",
-    "Fire",
-    "Water",
-    "Electric",
-    "Grass",
-    "Ice",
-    "Fighting",
-    "Poison",
-    "Ground",
-    "Flying",
-    "Psychic",
-    "Bug",
-    "Rock",
-    "Ghost",
-    "Dragon",
-    "Dark",
-    "Steel",
-    "Fairy",
-]
+pokemon_types = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice",
+                 "Fighting", "Poison", "Ground", "Flying", "Psychic",
+                 "Bug", "Rock", "Ghost", "Dragon", "Dark", "Steel", "Fairy"]
 
 # Used to map string values of pokemon_types to an integer for machine learning
-pokemon_types_dict = {
-    "Normal": 1,
-    "Fire": 2,
-    "Water": 3,
-    "Electric": 4,
-    "Grass": 5,
-    "Ice": 6,
-    "Fighting": 7,
-    "Poison": 8,
-    "Ground": 9,
-    "Flying": 10,
-    "Psychic": 11,
-    "Bug": 12,
-    "Rock": 13,
-    "Ghost": 14,
-    "Dragon": 15,
-    "Dark": 16,
-    "Steel": 17,
-    "Fairy": 18,
-}
+pokemon_types_dict = {'Normal': 1, 'Fire': 2, 'Water': 3, 'Electric': 4, 'Grass': 5, 'Ice': 6, 'Fighting': 7,
+                      'Poison': 8, 'Ground': 9, 'Flying': 10, 'Psychic': 11, 'Bug': 12, 'Rock': 13, 'Ghost': 14,
+                      'Dragon': 15, 'Dark': 16, 'Steel': 17, 'Fairy': 18}
+
 
 pokemon_conditions_dict = {
-    "None": 0,
-    "Paralyzed": 1,
-    "Asleep": 2,
-    "Burned": 3,
-    "Poisoned": 4,
-    "Confused": 6,
-    "Frozen": 7,
+    "None": 0,  "Paralyzed": 1,  "Asleep": 2,  "Burned": 3,  "Poisoned": 4,  "Confused": 6,  "Frozen": 7,
 }
 
 # A 2 Dimenstional Numpy Array Of Damage Multipliers For Attacking Pokemon:
@@ -72,64 +34,40 @@ pokemon_conditions_dict = {
 # 1/2: not very effective
 # for reference, see damage type chart on discord
 
-damage_array = np.array([
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 / 2, 0, 1, 1, 1 / 2, 1],
-    [1, 1 / 2, 1 / 2, 1, 2, 2, 1, 1, 1, 1, 1, 2, 1 / 2, 1, 1 / 2, 1, 2, 1],
-    [1, 2, 1 / 2, 1, 1 / 2, 1, 1, 1, 2, 1, 1, 1, 2, 1, 1 / 2, 1, 1, 1],
-    [1, 1, 2, 1 / 2, 1 / 2, 1, 1, 1, 0, 2, 1, 1, 1, 1, 1 / 2, 1, 1, 1],
-    [
-        1,
-        1 / 2,
-        2,
-        1,
-        1 / 2,
-        1,
-        1,
-        1 / 2,
-        2,
-        1 / 2,
-        1,
-        1 / 2,
-        2,
-        1,
-        1 / 2,
-        1,
-        1 / 2,
-        1,
-    ],
-    [1, 1 / 2, 1 / 2, 1, 2, 1 / 2, 1, 1, 2, 2, 1, 1, 1, 1, 2, 1, 1 / 2, 1],
-    [2, 1, 1, 1, 1, 2, 1, 1 / 2, 1, 1 / 2, 1 / 2, 1 / 2, 2, 0, 1, 2, 2, 1 / 2],
-    [1, 1, 1, 1, 2, 1, 1, 1 / 2, 1 / 2, 1, 1, 1, 1 / 2, 1 / 2, 1, 1, 0, 2],
-    [1, 2, 1, 2, 1 / 2, 1, 1, 2, 1, 0, 1, 1 / 2, 2, 1, 1, 1, 2, 1],
-    [1, 1, 1, 1 / 2, 2, 1, 2, 1, 1, 1, 1, 2, 1 / 2, 1, 1, 1, 1 / 2, 1],
-    [1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 1 / 2, 1, 1, 1, 1, 0, 1 / 2, 1],
-    [
-        1,
-        1 / 2,
-        1,
-        1,
-        2,
-        1,
-        1 / 2,
-        1 / 2,
-        1,
-        1 / 2,
-        2,
-        1,
-        1,
-        1 / 2,
-        1,
-        2,
-        1 / 2,
-        1 / 2,
-    ],
-    [1, 2, 1, 1, 1, 2, 1 / 2, 1, 1 / 2, 2, 1, 2, 1, 1, 1, 1, 1 / 2, 1],
-    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 2, 1, 1 / 2, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1 / 2, 0],
-    [1, 1, 1, 1, 1, 1, 1 / 2, 1, 1, 1, 2, 1, 1, 2, 1, 1 / 2, 1, 1 / 2],
-    [1, 1 / 2, 1 / 2, 1 / 2, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1 / 2, 2],
-    [1, 1 / 2, 1, 1, 1, 1, 2, 1 / 2, 1, 1, 1, 1, 1, 1, 2, 2, 1 / 2, 1],
-])
+damage_array = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1/2, 0, 1, 1, 1/2, 1],
+                        [1, 1/2, 1/2, 1, 2, 2, 1, 1, 1, 1,
+                            1, 2, 1/2, 1, 1/2, 1, 2, 1],
+                        [1, 2, 1/2, 1, 1/2, 1, 1, 1, 2,
+                            1, 1, 1, 2, 1, 1/2, 1, 1, 1],
+                        [1, 1, 2, 1/2, 1/2, 1, 1, 1, 0,
+                            2, 1, 1, 1, 1, 1/2, 1, 1, 1],
+                        [1, 1/2, 2, 1, 1/2, 1, 1, 1/2, 2, 1 /
+                            2, 1, 1/2, 2, 1, 1/2, 1, 1/2, 1],
+                        [1, 1/2, 1/2, 1, 2, 1/2, 1, 1, 2,
+                            2, 1, 1, 1, 1, 2, 1, 1/2, 1],
+                        [2, 1, 1, 1, 1, 2, 1, 1/2, 1, 1/2,
+                            1/2, 1/2, 2, 0, 1, 2, 2, 1/2],
+                        [1, 1, 1, 1, 2, 1, 1, 1/2, 1/2, 1,
+                            1, 1, 1/2, 1/2, 1, 1, 0, 2],
+                        [1, 2, 1, 2, 1/2, 1, 1, 2, 1, 0,
+                            1, 1/2, 2, 1, 1, 1, 2, 1],
+                        [1, 1, 1, 1/2, 2, 1, 2, 1, 1, 1,
+                            1, 2, 1/2, 1, 1, 1, 1/2, 1],
+                        [1, 1, 1, 1, 1, 1, 2, 2, 1, 1,
+                            1/2, 1, 1, 1, 1, 0, 1/2, 1],
+                        [1, 1/2, 1, 1, 2, 1, 1/2, 1/2, 1, 1 /
+                            2, 2, 1, 1, 1/2, 1, 2, 1/2, 1/2],
+                        [1, 2, 1, 1, 1, 2, 1/2, 1, 1/2,
+                            2, 1, 2, 1, 1, 1, 1, 1/2, 1],
+                        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                            2, 1, 1, 2, 1, 1/2, 1, 1],
+                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                            1, 1, 1, 1, 2, 1, 1/2, 0],
+                        [1, 1, 1, 1, 1, 1, 1/2, 1, 1, 1,
+                            2, 1, 1, 2, 1, 1/2, 1, 1/2],
+                        [1, 1/2, 1/2, 1/2, 1, 2, 1, 1, 1,
+                            1, 1, 1, 2, 1, 1, 1, 1/2, 2],
+                        [1, 1/2, 1, 1, 1, 1, 2, 1/2, 1, 1, 1, 1, 1, 1, 2, 2, 1/2, 1]])
 
 # -------------------------------------------------------------------------------------
 
@@ -163,23 +101,7 @@ class Team:
 
 # Pokemon Class
 class Pokemon:
-    def __init__(
-        self,
-        name,
-        type1,
-        type2,
-        healthPercentage,
-        moves,
-        status,
-        hp,
-        attack,
-        spattack,
-        defense,
-        spdefense,
-        speed,
-        ability,
-        item,
-    ):
+    def __init__( self, name, type1, type2, healthPercentage, moves, status, hp, attack, spattack, defense, spdefense, speed, ability, item,):
         self.name = name
         self.type1 = type1  # changed this variable name from types to type1, updated in the toArray
         self.type2 = type2
@@ -206,16 +128,16 @@ class Pokemon:
             self.type2] if self.type2 is not None else 0
 
         return [
-            types_int,
-            type2_int,
-            self.healthPercentage,
-            self.attack,
-            self.spattack,
-            self.defense,
-            self.spdefense,
-            self.speed,
-            self.maxHp,
-        ] + [item for items in self.moves for item in items.toArray()]
+                   types_int,
+                   type2_int,
+                   self.healthPercentage,
+                   self.attack,
+                   self.spattack,
+                   self.defense,
+                   self.spdefense,
+                   self.speed,
+                   self.maxHp,
+               ] + [item for items in self.moves for item in items.toArray()]
 
 
 # Moves Class
@@ -232,7 +154,7 @@ class Move:
     # Returns an array that represents parameters about this object
     def toArray(self):
         physpc_int = (0 if self.physpc is None else 1 if self.physpc
-                      == "special" else 2 if self.physpc == "status" else -1)
+                                                         == "special" else 2 if self.physpc == "status" else -1)
         basePower_int = self.basePower if self.basePower is not None else -1
         return [
             pokemon_types_dict[self.moveType],
@@ -312,13 +234,47 @@ def fightSim(Team1, Team2, team1Action, team2Action):
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
             damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
-    # if Team2 moves first
+        # if Team2 moves first
     else:
         # do calc
         damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
             damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
+
+    # Automatically pick an available Pokemon if one of the teams' active pokemon fainted
+    if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
+        # Automatically pick a Pokemon for Team 1
+        if Team1.Pokemon1.hp > 0:
+            Team1.activePokemon = Team1.Pokemon1
+            Team1.activePokemonN = 1
+        elif Team1.Pokemon2.hp > 0:
+            Team1.activePokemon = Team1.Pokemon2
+            Team1.activePokemonN = 2
+        elif Team1.Pokemon3.hp > 0:
+            Team1.activePokemon = Team1.Pokemon3
+            Team1.activePokemonN = 3
+        else:
+            # All pokemon are fainted, this shouldn't happen from the above check
+            pass
+    elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
+        # Automatically pick a Pokemon for Team 2
+        if Team2.Pokemon1.hp > 0:
+            Team2.activePokemon = Team2.Pokemon1
+            Team2.activePokemonN = 1
+        elif Team2.Pokemon2.hp > 0:
+            Team2.activePokemon = Team2.Pokemon2
+            Team2.activePokemonN = 2
+        elif Team2.Pokemon3.hp > 0:
+            Team2.activePokemon = Team2.Pokemon3
+            Team2.activePokemonN = 3
+        else:
+            # All pokemon are fainted, this shouldn't happen from the above check
+            pass
+    else:
+        # I don't think both pokemon will faint on the same turn in this limited simulation,
+        # therefore assume they're both alive
+        pass
 
 
 # Returns an array of parameters
@@ -407,23 +363,23 @@ def battleSim(Team1, Team2):
             fightSim(Team1, Team2, chooseTeam1Move, chooseTeam2Move)
 
             # print out action info
-            if(chooseTeam1Move < 5 and Team1.activePokemon.hp > 0):
+            if (chooseTeam1Move < 5 and Team1.activePokemon.hp > 0):
                 delayPrint(Team1.activePokemon.name)
                 delayPrint(" used ")
                 delayPrint(Team1.activePokemon.moves[(
-                    chooseTeam1Move - 1)].moveName)
+                        chooseTeam1Move - 1)].moveName)
                 delayPrint("!\n")
-                if(Team2.activePokemon.hp > 0):
+                if (Team2.activePokemon.hp > 0):
                     delayPrint(Team2.activePokemon.name + " has ")
                     print(Team2.activePokemon.healthPercentage)
                     delayPrint(" remaining health\n")
-            if(chooseTeam2Move < 5 and Team2.activePokemon.hp > 0):
+            if (chooseTeam2Move < 5 and Team2.activePokemon.hp > 0):
                 delayPrint(Team2.activePokemon.name)
                 delayPrint(" used ")
                 delayPrint(Team2.activePokemon.moves[(
-                    chooseTeam2Move - 1)].moveName)
+                        chooseTeam2Move - 1)].moveName)
                 delayPrint("!\n")
-                if(Team1.activePokemon.hp > 0):
+                if (Team1.activePokemon.hp > 0):
                     delayPrint(Team1.activePokemon.name + " has ")
                     print(Team1.activePokemon.healthPercentage)
                     delayPrint(" remaining health\n")
@@ -444,73 +400,6 @@ def battleSim(Team1, Team2):
                     and Team2.Pokemon3.hp <= 0):
                 Team2.hasAvailablePokemon = False
 
-            # Automated switching (this doesn't work yet)
-            # if(Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
-            #     if(Team1.Pokemon2.hp > 0 and Team1.Pokemon3.hp > 0):
-            #         if(Team2.activePokemon.type2 == None and Team1.Pokemon.type2 == None):
-            #             if(damage_array[Team2.activePokemon.type1][Team1.Pokemon2.type1] >= damage_array[Team2.activePokemon.type1][Team1.Pokemon3.type1]):
-            #                 Team1.activePokemon = Team1.Pokemon3
-            #                 Team1.activePokemonN = 3
-            #             else:
-            #                 Team1.activePokemon = Team1.Pokemon2
-            #                 Team1.activePokemonN = 2
-            #         elif(Team2.activePokemon.type2 == None and Team1.Pokemon.type2 != None):
-            #         else(Team2.activePokemon.type2 != None and Team1.Pokemon.type2 == None):
-            #         else: #both pokemon have 2 types
-            #     elif(Team1.Pokemon1.hp > 0 and Team1.Pokemon2.hp > 0):
-            #     elif(Team1.Pokemon1.hp > 0 and Team1.Pokemon3.hp > 0):
-            #     elif(Team1.Pokemon1.hp > 0):
-            #         Team1.activePokemon = Team1.Pokemon1
-            #         Team1.activePokemonN = 1
-            #     elif(Team1.Pokemon2.hp > 0):
-            #         Team1.activePokemon = Team1.Pokemon2
-            #         Team1.activePokemonN = 2
-            #     elif(Team1.Pokemon3.hp > 0):
-            #         Team1.activePokemon = Team1.Pokemon3
-            #         Team1.activePokemonN = 3
-            #     else:
-            #         pass
-            # else:  # reverse Team1 and Team2 from previous if block
-
-                # TODO Automate
-            if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
-                delayPrint(
-                    "Enter an integer for a command: 1 for Pokemon1, 2 for Pokemon 2, 3 for Pokemon 3: "
-                )
-                txt = input()
-                if txt == "1":
-                    Team1.activePokemon = Team1.Pokemon1
-                    Team1.activePokemonN = 1
-                elif txt == "2":
-                    Team1.activePokemon = Team1.Pokemon2
-                    Team1.activePokemonN = 2
-                elif txt == "3":
-                    Team1.activePokemon = Team1.Pokemon3
-                    Team1.activePokemonN = 3
-                else:
-                    delayPrint("Error in setting new active pokemon")
-            elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0
-                  and Team2.hasAvailablePokemon):
-                delayPrint(
-                    "Enter an integer for a command: 1 for Pokemon1, 2 for Pokemon 2, 3 for Pokemon 3: "
-                )
-                txt = input()
-                if txt == "1":
-                    Team2.activePokemon = Team2.Pokemon1
-                    Team2.activePokemonN = 1
-                elif txt == "2":
-                    Team2.activePokemon = Team2.Pokemon2
-                    Team2.activePokemonN = 2
-                elif txt == "3":
-                    Team2.activePokemon = Team2.Pokemon3
-                    Team2.activePokemonN = 3
-                else:
-                    delayPrint("Error in setting new active pokemon")
-            else:
-                # I don't think both pokemon will faint on the same turn in this limited simulation,
-                # therefore assume they're both alive
-                pass
-
     # print winning team
     if Team1.hasAvailablePokemon and (Team2.hasAvailablePokemon == False):
         delayPrint("Team 1 wins!\n")
@@ -524,8 +413,6 @@ def isGameOver(team1: Team, team2: Team):
 
 # Perform a step in the game simulation. This is primarily used by the AI
 def step(team1: Team, team2: Team, team1_action, team2_action):
-    # TODO: Store observation before performing move and compare? OR store rewards in class? Latter may be less performance heavy
-    # ...
 
     # Perform the turn/round
     fightSim(team1, team2, team1_action, team2_action)
@@ -533,9 +420,8 @@ def step(team1: Team, team2: Team, team1_action, team2_action):
     # Determine observation, or new state space
     observation = getState(team1, team2)
 
-    # TODO: Determine rewards for each team
-    reward_a = 0
-    reward_b = 0
+    reward_a = team1.reward
+    reward_b = team2.reward
 
     # Determine if game (episode) is over
     gameOver = isGameOver(team1, team2)
@@ -577,10 +463,11 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
         # determine the type effectiveness
         if Pokemon2.type2 == None:  # If the defending pokemon only has one type
             typeEffectiveness = damage_array[Pokemon1.moves[(
-                move - 1)].moveType][Pokemon2.type1]
+                    move - 1)].moveType][Pokemon2.type1]
         else:  # if the defending pokemon is dual type
             typeEffectiveness = (damage_array[Pokemon1.moves[(
-                move - 1)].moveType][Pokemon2.type1] * damage_array[Pokemon1.moves[(move - 1)].moveType][Pokemon2.type2])
+                    move - 1)].moveType][Pokemon2.type1] * damage_array[Pokemon1.moves[(move - 1)].moveType][
+                                     Pokemon2.type2])
 
         # Determine if the Attacker gets a damage reduction for being burned and using a physical move
         burn = 1.0
@@ -598,13 +485,13 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
         # if the move is physical
         if Pokemon1.moves[(move - 1)].physpc == "physical":
             damage = (((
-                ((((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
-                 (Pokemon1.attack / Pokemon2.defense)) / 50.0) + 2.0) * modifier)
+                               ((((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
+                                (Pokemon1.attack / Pokemon2.defense)) / 50.0) + 2.0) * modifier)
         # if the move is special
         else:
             damage = ((((
-                (((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
-                (Pokemon1.spattack / Pokemon2.spdefense)) / 50.0) + 2.0) * modifier)
+                                (((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
+                                (Pokemon1.spattack / Pokemon2.spdefense)) / 50.0) + 2.0) * modifier)
 
         # apply damage
         Pokemon2.hp -= damage
@@ -908,7 +795,6 @@ def generate_team_2():
 # Pokemon simulation game when running pokemon.py
 # During machine learning team generation and battle simulation will happen independently of battleSim() function
 def main():
-
     # Generate teams
     Team1 = generate_team_1()
     Team2 = generate_team_2()
