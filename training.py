@@ -152,6 +152,7 @@ def main():
 		team_b = pokemon.generate_team_2()
 
 		observation = pokemon.getState(team_a, team_b)
+		print(observation)
 
 		# Store how many steps player A/B has made since they started being the one training
 		current_switch_step = 0

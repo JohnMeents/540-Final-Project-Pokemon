@@ -90,6 +90,8 @@ class Team:
         self.activePokemon = Pokemon1
         self.activePokemonN = 1
         self.hasAvailablePokemon = True
+        self.reward = 0
+        self.roundNumber = 0
 
     # Returns an array that represents parameters about this object
     def toArray(self):
@@ -122,14 +124,10 @@ class Pokemon:
     # Returns an array that represents parameters about this object
     def toArray(self):
         # Generate integer values for these strings
-        types_int = pokemon_types_dict[
-            self.type1] if self.type1 is not None else 0
-        type2_int = pokemon_types_dict[
-            self.type2] if self.type2 is not None else 0
 
         return [
-                   types_int,
-                   type2_int,
+                   self.type1,
+                   self.type2 if self.type2 is not None else 0,
                    self.healthPercentage,
                    self.attack,
                    self.spattack,
@@ -157,7 +155,7 @@ class Move:
                                                          == "special" else 2 if self.physpc == "status" else -1)
         basePower_int = self.basePower if self.basePower is not None else -1
         return [
-            pokemon_types_dict[self.moveType],
+            self.moveType,
             physpc_int,
             basePower_int,
             self.accuracy,
@@ -166,6 +164,9 @@ class Move:
 
 # a function that takes an integer as an action, an int/bool as team and pokemon info
 def fightSim(Team1, Team2, team1Action, team2Action):
+    Team1.reward = 0
+    Team2.reward = 0
+
     # if they switch pokemon, that action happens first before the opponent moves
     # switching Team1 pokemon
     if team1Action == 5 or team1Action == 6:
@@ -231,19 +232,24 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     if Team1.activePokemon.speed >= Team2.activePokemon.speed:
         # do calc
         damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
+        Team1.reward += 3
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
             damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
+            Team2.reward += 3
         # if Team2 moves first
     else:
         # do calc
         damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
+        Team2.reward += 3
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
             damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
+            Team1.reward += 3
 
     # Automatically pick an available Pokemon if one of the teams' active pokemon fainted
     if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
+        Team1.reward -= 20
         # Automatically pick a Pokemon for Team 1
         if Team1.Pokemon1.hp > 0:
             Team1.activePokemon = Team1.Pokemon1
@@ -258,6 +264,7 @@ def fightSim(Team1, Team2, team1Action, team2Action):
             # All pokemon are fainted, this shouldn't happen from the above check
             pass
     elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
+        Team2.reward -= 20
         # Automatically pick a Pokemon for Team 2
         if Team2.Pokemon1.hp > 0:
             Team2.activePokemon = Team2.Pokemon1
@@ -275,6 +282,12 @@ def fightSim(Team1, Team2, team1Action, team2Action):
         # I don't think both pokemon will faint on the same turn in this limited simulation,
         # therefore assume they're both alive
         pass
+
+    Team1.reward -= Team1.roundNumber / 10
+    Team2.reward -= Team2.roundNumber / 10
+
+    Team1.roundNumber += 1
+    Team2.roundNumber += 1
 
 
 # Returns an array of parameters
@@ -387,10 +400,10 @@ def battleSim(Team1, Team2):
             # if a pokemon faints:
             if Team1.activePokemon.hp <= 0:
                 delayPrint(Team1.activePokemon.name +
-                           " fainted!\nChoose an available Pokemon!\n")
+                           " fainted!\n")
             if Team2.activePokemon.hp <= 0:
                 delayPrint(Team2.activePokemon.name +
-                           " fainted!\nChoose an available Pokemon!\n")
+                           " fainted!\n")
 
             # check if each team has available pokemon
             if (Team1.Pokemon1.hp <= 0 and Team1.Pokemon2.hp <= 0
