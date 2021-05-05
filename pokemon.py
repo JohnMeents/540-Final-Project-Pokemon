@@ -7,6 +7,7 @@ import time
 import random
 import numpy as np
 import sys
+import math
 
 
 # -------------------------------------Global Data--------------------------------------
@@ -103,7 +104,7 @@ class Team:
 
 # Pokemon Class
 class Pokemon:
-    def __init__( self, name, type1, type2, healthPercentage, moves, status, hp, attack, spattack, defense, spdefense, speed, ability, item,):
+    def __init__(self, name, type1, type2, healthPercentage, moves, status, hp, attack, spattack, defense, spdefense, speed, ability, item,):
         self.name = name
         self.type1 = type1  # changed this variable name from types to type1, updated in the toArray
         self.type2 = type2
@@ -126,16 +127,16 @@ class Pokemon:
         # Generate integer values for these strings
 
         return [
-                   self.type1,
-                   self.type2 if self.type2 is not None else 0,
-                   self.healthPercentage,
-                   self.attack,
-                   self.spattack,
-                   self.defense,
-                   self.spdefense,
-                   self.speed,
-                   self.maxHp,
-               ] + [item for items in self.moves for item in items.toArray()]
+            self.type1,
+            self.type2 if self.type2 is not None else 0,
+            self.healthPercentage,
+            self.attack,
+            self.spattack,
+            self.defense,
+            self.spdefense,
+            self.speed,
+            self.maxHp,
+        ] + [item for items in self.moves for item in items.toArray()]
 
 
 # Moves Class
@@ -152,7 +153,7 @@ class Move:
     # Returns an array that represents parameters about this object
     def toArray(self):
         physpc_int = (0 if self.physpc is None else 1 if self.physpc
-                                                         == "special" else 2 if self.physpc == "status" else -1)
+                      == "special" else 2 if self.physpc == "status" else -1)
         basePower_int = self.basePower if self.basePower is not None else -1
         return [
             self.moveType,
@@ -314,10 +315,16 @@ def battleSim(Team1, Team2, ai=None, ai_is_a=True):
         # if both active pokemon have health: loop:
         while Team1.activePokemon.hp >= 0 and Team2.activePokemon.hp >= 0:
             # print out fight info
+            delayPrint("Team 1's active Pokemon: ")
             delayPrint(Team1.activePokemon.name)
             delayPrint("\n")
+            delayPrint("Health percentage: ")
+            print(Team1.activePokemon.healthPercentage)
+            delayPrint("Team 1's active Pokemon: ")
             delayPrint(Team2.activePokemon.name)
             delayPrint("\n")
+            delayPrint("Health percentage: ")
+            print(Team2.activePokemon.healthPercentage)
 
             if ai is not None and ai_is_a:
                 # Playing against AI, and AI is player 1
@@ -328,7 +335,12 @@ def battleSim(Team1, Team2, ai=None, ai_is_a=True):
                 # moves are chosen for Team 1
                 while validInput1 == False:
                     delayPrint(
-                        "Team 1, Enter and integer for the following command\n1: Move 1\n2: Move 2\n3: Move 3\n4: Move 4\n5: Switch to first available pokemon\n6: Switch to second available Pokemon\n"
+                        "Team 1, Enter an integer for the following command\n" +
+                        "1: " + Team1.activePokemon.moves[0].moveName +
+                        "   2: " + Team1.activePokemon.moves[1].moveName +
+                        "   3: " + Team1.activePokemon.moves[2].moveName +
+                        "   4: " + Team1.activePokemon.moves[3].moveName +
+                        "\n5: Switch to first available Pokemon   6: Switch to second available Pokemon\n"
                     )
                     chooseTeam1Move = input()
                     # If they chose 1-4
@@ -362,7 +374,12 @@ def battleSim(Team1, Team2, ai=None, ai_is_a=True):
                 # moves are chosen for Team 2
                 while validInput2 == False:
                     delayPrint(
-                        "Team 2, Enter and integer for the following command\n1: Move 1\n2: Move 2\n3: Move 3\n4: Move 4\n5: Switch to first available pokemon\n6: Switch to second available Pokemon\n"
+                        "Team 2, Enter an integer for the following command\n" +
+                        "1: " + Team2.activePokemon.moves[0].moveName +
+                        "   2: " + Team2.activePokemon.moves[1].moveName +
+                        "   3: " + Team2.activePokemon.moves[2].moveName +
+                        "   4: " + Team2.activePokemon.moves[3].moveName +
+                        "\n5: Switch to first available Pokemon   6: Switch to second available Pokemon\n"
                     )
                     chooseTeam2Move = input()
                     # If they choose 1-4
@@ -399,22 +416,22 @@ def battleSim(Team1, Team2, ai=None, ai_is_a=True):
                 delayPrint(Team1.activePokemon.name)
                 delayPrint(" used ")
                 delayPrint(Team1.activePokemon.moves[(
-                        chooseTeam1Move - 1)].moveName)
+                    chooseTeam1Move - 1)].moveName)
                 delayPrint("!\n")
                 if (Team2.activePokemon.hp > 0):
                     delayPrint(Team2.activePokemon.name + " has ")
-                    print(Team2.activePokemon.healthPercentage)
-                    delayPrint(" remaining health\n")
+                    print(Team2.activePokemon.healthPercentage, end='')
+                    delayPrint(" percent health\n")
             if (chooseTeam2Move < 5 and Team2.activePokemon.hp > 0):
                 delayPrint(Team2.activePokemon.name)
                 delayPrint(" used ")
                 delayPrint(Team2.activePokemon.moves[(
-                        chooseTeam2Move - 1)].moveName)
+                    chooseTeam2Move - 1)].moveName)
                 delayPrint("!\n")
                 if (Team1.activePokemon.hp > 0):
                     delayPrint(Team1.activePokemon.name + " has ")
-                    print(Team1.activePokemon.healthPercentage)
-                    delayPrint(" remaining health\n")
+                    print(Team1.activePokemon.healthPercentage, end='')
+                    delayPrint(" percent health\n")
 
             # if a pokemon faints:
             if Team1.activePokemon.hp <= 0:
@@ -460,6 +477,11 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
     if move == 5 or move == 6:
         return
 
+    # accuracy check
+    accuracyGenerator = random.randint(1, 100)
+    if (Pokemon1.moves[(move - 1)].accuracy < accuracyGenerator):
+        return
+
     # if Pokemon1 uses a damage dealing move
     if (Pokemon1.moves[(move - 1)].physpc == "physical"
             or Pokemon1.moves[(move - 1)].physpc == "special"):
@@ -486,11 +508,11 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
         # determine the type effectiveness
         if Pokemon2.type2 == None:  # If the defending pokemon only has one type
             typeEffectiveness = damage_array[Pokemon1.moves[(
-                    move - 1)].moveType][Pokemon2.type1]
+                move - 1)].moveType][Pokemon2.type1]
         else:  # if the defending pokemon is dual type
             typeEffectiveness = (damage_array[Pokemon1.moves[(
-                    move - 1)].moveType][Pokemon2.type1] * damage_array[Pokemon1.moves[(move - 1)].moveType][
-                                     Pokemon2.type2])
+                move - 1)].moveType][Pokemon2.type1] * damage_array[Pokemon1.moves[(move - 1)].moveType][
+                Pokemon2.type2])
 
         # Determine if the Attacker gets a damage reduction for being burned and using a physical move
         burn = 1.0
@@ -508,23 +530,26 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
         # if the move is physical
         if Pokemon1.moves[(move - 1)].physpc == "physical":
             damage = (((
-                               ((((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
-                                (Pokemon1.attack / Pokemon2.defense)) / 50.0) + 2.0) * modifier)
+                ((((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
+                 (Pokemon1.attack / Pokemon2.defense)) / 50.0) + 2.0) * modifier)
         # if the move is special
         else:
             damage = ((((
-                                (((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
-                                (Pokemon1.spattack / Pokemon2.spdefense)) / 50.0) + 2.0) * modifier)
+                (((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
+                (Pokemon1.spattack / Pokemon2.spdefense)) / 50.0) + 2.0) * modifier)
 
         # apply damage
         Pokemon2.hp -= damage
-        Pokemon2.healthPercentage = Pokemon2.hp / Pokemon2.maxHp
+        # Pokemon2.healthPercentage = (Pokemon2.hp / Pokemon2.maxHp) * 100
+        Pokemon2.healthPercentage = math.ceil(
+            ((Pokemon2.hp / Pokemon2.maxHp) * 100))
     # Pokemon1 used a non-damaging move
     else:
         # temp -----------------------------------------------------
         damage = 100
         Pokemon2.hp -= damage
-        Pokemon2.healthPercentage = Pokemon2.hp / Pokemon2.maxHp
+        Pokemon2.healthPercentage = math.ceil(
+            ((Pokemon2.hp / Pokemon2.maxHp) * 100))
         # temp -----------------------------------------------------
 
     # criticalMultiplier = 1/16th chance it equals 1.5, otherwise it's 1.0
@@ -574,6 +599,14 @@ def generate_team_1():
         100,
         "Paralyzes opposing pokemon",
     )
+    Surf = Move(
+        "Surf",
+        pokemon_types_dict["Water"],
+        "special",
+        95,
+        100,
+        "None",
+    )
     # snorlax moves
     BodySlam = Move(
         "Body Slam",
@@ -607,6 +640,24 @@ def generate_team_1():
         101,
         "uses one of the other 3 moves randomly if you are asleep",
     )
+    Crunch = Move(
+        "Crunch",
+        pokemon_types_dict["Dark"],
+        "physical",
+        80,
+        100,
+        "20 percent chance to lower the target's defense by one stage"
+    )
+    BrickBreak = Move(
+        "Brick Break",
+        pokemon_types_dict["Fighting"],
+        "physical",
+        75,
+        100,
+        "None"
+    )
+    Earthquake = Move("Earthquake", pokemon_types_dict["Ground"], "physical",
+                      100, 100, None)
     # Wishcash moves
     HydroPump = Move("Hydro Pump", pokemon_types_dict["Water"], "special", 120,
                      80, None)
@@ -634,11 +685,19 @@ def generate_team_1():
         90,
         "User cannot move next turn",
     )
+    ZenHeadbutt = Move(
+        "Zen HeadButt",
+        pokemon_types_dict["Psychic"],
+        "physical",
+        80,
+        90,
+        "20 percent chance to flinch the target"
+    )
 
     # create Team1
-    pikachuMoves = [Thunderbolt, SignalBeam, NastyPlot, ThunderWave]
-    snorlaxMoves = [BodySlam, Rest, Yawn, SleepTalk]
-    wishcashMoves = [HydroPump, EarthPower, Blizzard, HyperBeam]
+    pikachuMoves = [Thunderbolt, SignalBeam, BodySlam, Surf]
+    snorlaxMoves = [BodySlam, Crunch, Earthquake, BrickBreak]
+    wishcashMoves = [HydroPump, EarthPower, Blizzard, ZenHeadbutt]
     Pikachu = Pokemon(
         "Pikachu",
         pokemon_types_dict["Electric"],
@@ -758,12 +817,20 @@ def generate_team_2():
         101,
         "Heals the user by 50 percent max hp",
     )
+    LeafStorm = Move(
+        "Leaf Storm",
+        pokemon_types_dict["Grass"],
+        "special",
+        140,
+        90,
+        "Lowers the user's special attack by two stages"
+    )
 
     # ------------------------------------------------------------------------------
     # create Team2
     charizardMoves = [Flamethrower, SolarBeam, Earthquake, FocusBlast]
     blastoiseMoves = [HydroPump, Earthquake, FocusBlast, HiddenPowerGrass]
-    venusaurMoves = [GigaDrain, SludgeBomb, SleepPowder, Synthesis]
+    venusaurMoves = [GigaDrain, SludgeBomb, Earthquake, LeafStorm]
     Charizard = Pokemon(
         "Charizard",
         pokemon_types_dict["Fire"],
