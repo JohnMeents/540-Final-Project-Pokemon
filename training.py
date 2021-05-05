@@ -1,4 +1,5 @@
 import tensorflow as tf
+from matplotlib import pyplot as plt
 import numpy as np
 import pokemon
 import random
@@ -114,20 +115,21 @@ class Agent():
 
 
 # ---------- Constants ----------
-learning_rate = 0.002
+learning_rate = 0.01
 gamma=0.99
-epsilon=0.2
+epsilon=0.05
 num_games = 100  # Number of full games to simulate
-switch_games = 25  # Switch who trains after n games
+switch_games = 50  # Switch who trains after n games
 
 space_size = 154  # Number of parameters in the observation space
 action_size = 6  # Number of actions that can be performed by the player
 
 # ---------- Global variables ----------
 train_a = True  # Set to True if player A is the one that's currently training
-play_ai = False # Set to True if you should verse the AI instead of training
+play_ai = True # Set to True if you should verse the AI instead of training
 player_a = True # Play as Player A (Otherwise, Player B)
 save_model = True # Overwrite saved model at end of training?
+save_plot = True # Save a plot of the scores?
 
 def switch_training():
     global train_a
@@ -139,6 +141,18 @@ def make_agent(fname):
                  input_dims=space_size, n_actions=action_size,
                  mem_size=1000000, batch_size=64, epsilon_end=0.01, fname=fname)
 
+def plot(x_data, y_data, filename, title='', x_label = 'X Axis', y_label='Y Axis'):
+    # If title is empty, generate one using axis labels
+    title = x_label + ' vs ' + y_label if title is '' else title
+
+    plt.figure()
+    plt.plot(x_data, y_data)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+
+    plt.title(title)
+    plt.savefig(filename + '.png')
+
 def play():
     print('Playing against the AI as player', ('A' if player_a else 'B'))
     # Play the game, let the simulation know that it's going to get input from the AI
@@ -146,10 +160,11 @@ def play():
     Team1 = pokemon.generate_team_1()
     Team2 = pokemon.generate_team_2()
 
-    # Load the AI
     fname = 'model_a.h5' if player_a else 'model_b.h5'
-    print('Loading saved model \'%s\'...' % fname)
     agent = make_agent(fname)
+
+    # Load the AI
+    print('Loading saved model \'%s\'...' % fname)
     agent.load_model()
 
     # battle the teams
@@ -209,18 +224,23 @@ def train():
         _score = score_a if train_a else score_b
         _epsilon = model_a.epsilon if train_a else model_b.epsilon
 
-        print('[Episode %i/%i]' % (current_game, num_games),
-              '[Training %c]' % ('A' if train_a else 'B'),
-              '[%c Win over %i turns]' % (('A' if team_a.hasAvailablePokemon else 'B'), team_a.roundNumber),
-              '[Score %i]' % _score,
-              '[average_score %.2f]' % avg_score,
-              '[epsilon %.2f]' % _epsilon)
+        #print('[Episode %i/%i]' % (current_game, num_games),
+        #      '[Training %c]' % ('A' if train_a else 'B'),
+        #      '[%c Win over %i turns]' % (('A' if team_a.hasAvailablePokemon else 'B'), team_a.roundNumber),
+        #      '[Score %i]' % _score,
+        #      '[average_score %.2f]' % avg_score,
+        #      '[epsilon %.2f]' % _epsilon)
+        # Uncomment to display actions chosen for the game
+        #print(model_a.memory.mem_counter, model_a.memory.action_memory[model_a.memory.mem_counter-team_a.roundNumber:model_a.memory.mem_counter - 1])
 
     if save_model:
         print('Saving models to file...')
         model_a.save_model()
         model_b.save_model()
 
+    if save_plot:
+        print('Saving plot...')
+        plot([x for x in range(num_games)], scores, filename='scores_plot', x_label='Game Number', y_label='Score')
 
 if __name__ == '__main__':
     if not play_ai:
