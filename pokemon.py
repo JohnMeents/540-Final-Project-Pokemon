@@ -193,7 +193,7 @@ def fightSim(Team1, Team2, team1Action, team2Action):
         else:
             # Attempt to select a Pokemon that has fainted
             # Negatively impact the team's reward to discourage AI from attempting to switch to an invalid Pokemon
-            Team1.reward -= 10
+            Team1.reward -= 5
             pass
 
     # switching Team2 pokemon
@@ -220,32 +220,32 @@ def fightSim(Team1, Team2, team1Action, team2Action):
         else:
             # Attempt to select a Pokemon that has fainted
             # Negatively impact the team's reward to discourage AI from attempting to switch to an invalid Pokemon
-            Team2.reward -= 10
+            Team2.reward -= 5
             pass
 
     # if Team1 moves first
     if Team1.activePokemon.speed >= Team2.activePokemon.speed:
         # do calc
         damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
-        Team1.reward += 10
+        Team1.reward += 3
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
             damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
-            Team2.reward += 10
+            Team2.reward += 3
     # if Team2 moves first
     else:
         # do calc
         damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
-        Team2.reward += 10
+        Team2.reward += 3
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
             damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
-            Team1.reward += 10
+            Team1.reward += 3
 
     # Automatically pick an available Pokemon if one of the teams' active pokemon fainted
     if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
         # A Pokemon has fainted, punish the team
-        Team1.reward -= 15
+        Team1.reward -= 5
         # Automatically pick a Pokemon for Team 1
         if Team1.Pokemon1.hp > 0:
             Team1.activePokemon = Team1.Pokemon1
@@ -261,7 +261,7 @@ def fightSim(Team1, Team2, team1Action, team2Action):
             pass
     elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
         # A Pokemon has fainted, punish the team
-        Team2.reward -= 15
+        Team2.reward -= 5
         # Automatically pick a Pokemon for Team 2
         if Team2.Pokemon1.hp > 0:
             Team2.activePokemon = Team2.Pokemon1
@@ -284,12 +284,14 @@ def fightSim(Team1, Team2, team1Action, team2Action):
     if (Team1.Pokemon1.hp <= 0 and Team1.Pokemon2.hp <= 0 and Team1.Pokemon3.hp <= 0):
         Team1.hasAvailablePokemon = False
         # Team1 lost, punish the AI
-        Team1.reward -= 50
-        Team2.reward += 50
+        Team1.reward -= 7
+        # By far the best heuristic metric is if an AI won the game
+        Team2.reward += 12
     if (Team2.Pokemon1.hp <= 0 and Team2.Pokemon2.hp <= 0 and Team2.Pokemon3.hp <= 0):
         # Team2 lost, punish the AI
-        Team2.reward -= 50
-        Team1.reward += 50
+        Team2.reward -= 7
+        # By far the best heuristic metric is if an AI won the game
+        Team1.reward += 12
         Team2.hasAvailablePokemon = False
 
     # Discourage the AI from playing long games by linearly increasing a punishment
