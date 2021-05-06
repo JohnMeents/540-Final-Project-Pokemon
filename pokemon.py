@@ -932,7 +932,7 @@ def generate_team_2():
     )
     return Team("Team2", Charizard, Blastoise, Venusaur)
 
-
+# Returns the (n - 1) move that does the highest damage, from 0 to 3.
 def evaluator_highest_damage_action(team: Team):
     active = team.activePokemon
     best = 0
@@ -946,7 +946,7 @@ def evaluator_highest_damage_action(team: Team):
             highest_damage_move = tmp
             best = i
 
-    return i + 1
+    return i
 
 
 # Pokemon simulation game when running pokemon.py

@@ -53,6 +53,7 @@ class ReplayBuffer:
 
         return states, actions, rewards, new_states, doneflag
 
+
 # Generates a TensorFlow sequential model for training
 # Model contains several dense layers with an output shape equal to the number of actions
 # n_actions = size of action space, or number of actions agent can make
@@ -69,22 +70,24 @@ def build_dqn(learn_rate, n_actions, input_size):
 
     return model
 
+
 # A class to represent the DQN agent and its hyperparameters
 class Agent:
     def __init__(self, learn_rate, gamma, n_actions, epsilon_start, batch_size, input_size, epsilon_decrement=0.01,
                  epsilon_end=0.01, mem_size=1000000, fname='model.h5'):
         self.action_space = [i for i in range(n_actions)]
         self.learn_rate = learn_rate
-        self.gamma = gamma # Discount factor for learning
-        self.epsilon = epsilon_start # Exploration vs Exploitation
-        self.epsilon_start = epsilon_start # Starting chance of exploring
-        self.epsilon_min = epsilon_end # Minimum chance of exploring at any point
-        self.epsilon_decrement = epsilon_decrement # Linearly decrease of exploration over time
-        self.batch_size = batch_size # Number of samples to use for learning
-        self.model_file = fname # Filename to save the trained model at end of training
-        self.input_size = input_size # Size of the observation space
-        self.memory = ReplayBuffer(mem_size, input_size) # Stores information about past events
-        self.q_model = build_dqn(learn_rate, n_actions, input_size) # Creates and compiles a TensorFlow sequential model
+        self.gamma = gamma  # Discount factor for learning
+        self.epsilon = epsilon_start  # Exploration vs Exploitation
+        self.epsilon_start = epsilon_start  # Starting chance of exploring
+        self.epsilon_min = epsilon_end  # Minimum chance of exploring at any point
+        self.epsilon_decrement = epsilon_decrement  # Linearly decrease of exploration over time
+        self.batch_size = batch_size  # Number of samples to use for learning
+        self.model_file = fname  # Filename to save the trained model at end of training
+        self.input_size = input_size  # Size of the observation space
+        self.memory = ReplayBuffer(mem_size, input_size)  # Stores information about past events
+        self.q_model = build_dqn(learn_rate, n_actions,
+                                 input_size)  # Creates and compiles a TensorFlow sequential model
 
     # Stores the transition from old state and new state into memory
     # Memory holds what a state looked like before an action, after an action, and
@@ -110,7 +113,6 @@ class Agent:
 
         return action
 
-
     def learn(self):
 
         # Don't perform learning if our resulting batch size is too small
@@ -124,8 +126,8 @@ class Agent:
         q_eval = self.q_model.predict(states)
         # Generate a list of Q values for the sampled resulting new states
         q_next = self.q_model.predict(new_states)
-        q_target = np.copy(q_eval) # Python is weird. We want a deep copy
-        batch_index = np.arange(self.batch_size, dtype=np.int32) # Generates list of indices from 0 to batch_size
+        q_target = np.copy(q_eval)  # Python is weird. We want a deep copy
+        batch_index = np.arange(self.batch_size, dtype=np.int32)  # Generates list of indices from 0 to batch_size
 
         # Generate target Q values; target represents the "direction" we want prediction estimates to gravitate towards
         # The goal is to have Q targets converge to the best action
@@ -152,16 +154,21 @@ class Agent:
     # Load a model from the agent's model_file member
     def load_model(self):
         self.q_model = tf.keras.models.load_model(self.model_file)
-        #self.q_model.load_weights(self.model_file)
+        # self.q_model.load_weights(self.model_file)
 
 
 # ---------- Constants ----------
-num_games = 5  # Number of games to play
 num_games = 100  # Number of full games to simulate
 switch_games = 50  # Switch who trains after n games. This doesn't matter if training against an evaluator function
 
+# Choose which Team each opponent has!
+# (Optional) Set team 1 and team 2 to load from the same team configuration.
+#            The AI will play against an opponent with the exact same Pokemon!
+team_1_generator = pokemon.generate_team_1
+team_2_generator = pokemon.generate_team_1
+
 # Hyperparameters
-learning_rate = 0.001
+learning_rate = 0.0005
 gamma = 0.99  # Discount for Q targets in learning
 epsilon = 1.0  # Percent chance of exploring at start
 epsilon_dec = 0.002  # Amount to decrement epsilon per learning call
@@ -179,29 +186,35 @@ action_size = 6  # Number of actions that can be performed by the player
 #    True  = The simulation performs training on Player A
 #    False = The simulation performs training on Player B
 # If the Opponent is another Agent, the value that train_a
-# is set to is the Agent that will train first.
+#    is set to is the Agent that will train first.
 train_a = True
 
-# Should the AI train against an evaluator function?
+# Should the AI train or play against an evaluator function?
 #    None     = AI Agent will train against another Agent. The Agent
 #               that is actively training will switch defined by switch_games
-#    Not None = AI Agent will train against an opponent that picks its move
-#               defined by the given function. The AI will not switch
-#               training to the opponent as it is an evaluation function
-train_against_function = pokemon.evaluator_highest_damage_action
+#    Not None = AI Agent will train or play against an opponent that picks its move
+#               defined by the given function. If training, the AI will not switch
+#               training to the opponent, since it is an evaluation function
+evaluator_function = pokemon.evaluator_highest_damage_action
 
 # --- Playing ---
-play_ai = False  # Set to True if you should verse the AI instead of training
-player_a = True  # Play as Player A (Otherwise, Player B)
+play_ai = True  # Set to True if you should verse the AI instead of training
+
+# If playing, play as Player A.
+# If an Evaluator Function is defined, player_a represents
+# which player the Evaluator plays as.
+player_a = False
 
 save_model = True  # Overwrite saved model file at end of training?
 save_plot = True  # Save a plot of the scores?
 score_range = 5.0  # Maximum value to show when plotting scores (or outputting to console)
 
+
 # Switch which Agent is actively training
 def switch_training():
     global train_a
     train_a = not train_a
+
 
 # Generates a DQN Agent from global parameters
 def make_agent(fname):
@@ -209,10 +222,11 @@ def make_agent(fname):
                  input_size=space_size, n_actions=action_size,
                  mem_size=10000, batch_size=64, epsilon_end=0.01, epsilon_decrement=epsilon_dec, fname=fname)
 
+
 # Generates a matplotlib plot based on Game Scores for both Player A and Player B
 # y_data is a nested list, where each element is a pair of scores for both players:
 #     [[a_score, b_score], [a_score, b_score], ... <n games played>]
-def plot(x_data, y_data, filename, title='', x_label = 'X Axis', y_label='Y Axis', legend=['Player A', 'Player B']):
+def plot(x_data, y_data, filename, title='', x_label='X Axis', y_label='Y Axis', legend=['Player A', 'Player B']):
     # If title is empty, generate one using axis labels
     title = x_label + ' vs ' + y_label if title is '' else title
 
@@ -225,88 +239,138 @@ def plot(x_data, y_data, filename, title='', x_label = 'X Axis', y_label='Y Axis
     plt.title(title)
     plt.savefig(filename + '.png')
 
+
+# Chooses an action for Team A and Team B, given an observation of the environment.
+# The actions chosen consider if an Evaluator Function is defined.
+# Returns action A, action B
+def choose_actions(team_a, team_b, observation, agent_is_a, model_a=None, model_b=None):
+    # Choose actions for both teams
+    if evaluator_function is None or agent_is_a:
+        action_a = model_a.choose_action(observation)  # Choose with Agent A
+    elif evaluator_function is not None and not agent_is_a:
+        action_a = evaluator_function(team_a)  # Use Evaluator Function for Player A
+
+    if evaluator_function is None or not agent_is_a:
+        action_b = model_b.choose_action(observation)  # Choose with Agent B
+    elif evaluator_function is not None and agent_is_a:
+        action_b = evaluator_function(team_b)  # Use Evaluator Function for Player B
+
+    return action_a, action_b
+
+
 # Play is called if the user is choosing to play against the AI
-def play():
-    print('Playing against the AI as player', ('A' if player_a else 'B'))
-    # Generate teams
-    Team1 = pokemon.generate_team_1()
-    Team2 = pokemon.generate_team_2()
+# Set agent_against_evaluator to True if you would like the AI
+#   to play against the Evaluator Function, instead of you.
+#   In this context, "You" are replaced by the Evaluator Function.
+def play(verse_evaluator: bool = False):
 
-    fname = 'model_a.h5' if not player_a else 'model_b.h5'
-    agent = make_agent(fname)
+    if verse_evaluator:
+        print('Agent Evaluator vs Model %c' % ('B' if player_a else 'A'))
 
-    # Load the AI.
+    fname = 'model_b.h5' if player_a else 'model_a.h5'
+    model_a = make_agent(fname) if not player_a else None
+    model_b = make_agent(fname) if player_a else None
+
+    wins = [0, 0]  # Accumulate wins for A and B
+
+    # Load the AI
     print('Loading saved model \'%s\'...' % fname)
     try:
-        agent.load_model()
+        model_a.load_model() if model_a is not None else model_b.load_model()
     except:
-        print('Model could not be loaded -- playing against random AI')
+        print('Model %c could not be loaded -- playing against random AI' % ('A' if model_a is not None else 'B'))
 
-    # Play the game, let the simulation know that it's going to get input from the AI
-    pokemon.battleSim(Team1, Team2, ai=agent, ai_is_a=not player_a)
+    for current_game in range(num_games):
+        print('Game Number %i. %s Playing as Player %c' % (current_game + 1,
+                                                            ('The Evaluator is' if verse_evaluator else 'You are'),
+                                                            ('A' if player_a else 'B'),
+                                                            ))
+        # Generate teams
+        team_a = team_1_generator()
+        team_b = team_2_generator()
+
+        if verse_evaluator:
+            done = False  # Is this game over?
+            score_a = 0
+            score_b = 0
+            while not done:
+                action_a, action_b = choose_actions(team_a, team_b, pokemon.getState(team_a, team_b),
+                                                    not player_a, model_a=model_a, model_b=model_b)
+
+                observation, reward, done = pokemon.step(team_a, team_b, action_a + 1, action_b + 1)
+
+                # Accumulate game total scores from reward
+                score_a += reward[0]
+                score_b += reward[1]
+
+                print('[A used Move %i, B used Move %i] [Accumulated Scores %.2f, %.2f]'
+                      % (action_a + 1, action_b + 1, score_a, score_b))
+
+            # Game is over, who won?
+            print('%c Won the Game in %i moves!' % ('A' if team_a.hasAvailablePokemon else 'B', team_a.roundNumber))
+            wins[0] += 1 if team_a.hasAvailablePokemon else 0
+            wins[1] += 1 if team_b.hasAvailablePokemon else 0
+        else:
+            # Play the game, let the simulation know that it's going to get input from the AI
+            pokemon.battleSim(team_a, team_b, ai=(model_a if model_a is not None else model_b), ai_is_a=not player_a)
+            wins[0] += 1 if team_a.hasAvailablePokemon else 0
+            wins[1] += 1 if team_b.hasAvailablePokemon else 0
+
+    print('\nSimulation complete. Player A and B won %i and %i times' % (wins[0], wins[1]))
 
 # Train is called if the user is training one or more agents
 def train():
+    model_a = None
+    model_b = None
 
-    if train_against_function is not None:
-        print('Training Player %c against evaluator function' % 'A' if train_a else 'B')
+    if evaluator_function is not None:
+        print('Training Player %c against evaluator function' % ('A' if train_a else 'B'))
 
     # Create models for player A and B
-    if train_against_function is None or train_a:
+    if evaluator_function is None or train_a:
         # Create model A if not training against an evaluator OR we *are* and training Player A
         model_a = make_agent(fname='model_a.h5')
 
-    if train_against_function is None or not train_a:
+    if evaluator_function is None or not train_a:
         model_b = make_agent(fname='model_b.h5')
 
     # Keep track of scores for informative output and plotting
     scores = []
-
-    # Generate Pokemone teams for Team A and Team B
-    # (Optional) set to the same team to compare equivalent teams!
-    team_a = pokemon.generate_team_1()
-    team_b = pokemon.generate_team_2()
+    avg_scores = []
 
     # Play n games
     for current_game in range(num_games):
-        done = False # Is this game over?
+        done = False  # Is this game over?
         score_a = 0
         score_b = 0
 
         # Create a new instance of the pokemon game simulator (RESET)
         # TODO: This may be pretty slow
-        team_a = pokemon.generate_team_1()
-        team_b = pokemon.generate_team_2()
+        team_a = team_1_generator()
+        team_b = team_2_generator()
 
         # Observation is 'old observation' before actions are performed
         observation = pokemon.getState(team_a, team_b)
 
         while not done:
 
-            # Choose actions for both teams
-            if train_against_function is None or train_a:
-                action_a = model_a.choose_action(observation) # Train Agent A
-            elif train_against_function is not None and not train_a:
-                action_a = train_against_function(team_a) # Use Evaluator Function for Player A
-
-            if train_against_function is None or not train_a:
-                action_b = model_b.choose_action(observation) # Train Agent B
-            elif train_against_function is not None and train_a:
-                action_b = train_against_function(team_b) # Use Evaluator Function for Player B
+            # Choose actions for each team. This takes into consideration the Evaluator Function
+            action_a, action_b = choose_actions(team_a, team_b, observation, train_a,
+                                                model_a=model_a, model_b=model_b)
 
             # Perform a simulation step using the chosen actions
             new_observation, reward, done = pokemon.step(team_a, team_b, action_a + 1, action_b + 1)
-            #print('%.2f %.2f %i %i' % (reward[0], reward[1], action_a, action_b))
+            # print('%.2f %.2f %i %i' % (reward[0], reward[1], action_a, action_b))
 
             # Accumulate game total scores from reward
             score_a += reward[0]
             score_b += reward[1]
 
             # Store what we learned into Agents' memories
-            if train_against_function is None or train_a:
+            if evaluator_function is None or train_a:
                 model_a.store_step_transition(observation, action_a, reward[0], new_observation, done)
 
-            if train_against_function is None or not train_a:
+            if evaluator_function is None or not train_a:
                 model_b.store_step_transition(observation, action_b, reward[1], new_observation, done)
 
             # Old observation now takes on new value -- used for next loop iteration
@@ -318,7 +382,7 @@ def train():
 
         # Increment or switch who is training
         # Switching should not happen when training against and evaluator function
-        if current_game % switch_games == 0 and current_game is not 0 and train_against_function is None:
+        if current_game % switch_games == 0 and current_game is not 0 and evaluator_function is None:
             print('Switching training from player %c to player %c' %
                   (('A' if train_a else 'B'), ('B' if train_a else 'A')))
             # Perform switch so that the opponent begins training
@@ -330,7 +394,9 @@ def train():
 
         scores.append([score_a, score_b])
 
-        avg_score = np.mean(scores[-switch_games*2:], axis=0)
+        avg_score = np.mean(scores[-10:], axis=0)
+        avg_scores.append(avg_score)
+
         _epsilon = model_a.epsilon if train_a else model_b.epsilon
 
         print('[Episode %i/%i]' % (current_game, num_games),
@@ -340,20 +406,22 @@ def train():
               '[average_score (%.2f, %.2f)]' % (avg_score[0], avg_score[1]),
               '[epsilon %.2f]' % _epsilon)
 
+
     if save_model:
         print('Saving models to file...')
-        if train_against_function is None or train_a:
+        if evaluator_function is None or train_a:
             model_a.save_model()
 
-        if train_against_function is None or not train_a:
+        if evaluator_function is None or not train_a:
             model_b.save_model()
 
     if save_plot:
         print('Saving plot...')
-        plot([x for x in range(num_games)], scores, filename='scores_plot', x_label='Game Number', y_label='Score')
+        plot([x for x in range(num_games)], avg_scores, filename='scores_plot', x_label='Game Number', y_label='Score')
+
 
 if __name__ == '__main__':
     if not play_ai:
         train()
     else:
-        play()
+        play(evaluator_function is not None)
