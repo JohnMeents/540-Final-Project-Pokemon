@@ -72,23 +72,23 @@ damage_array = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 / 2, 0, 1, 1, 1 
 # The highest round that a game will last
 max_round = 50
 
-# ------------- Parameters for Rewards
+# ------------- Parameters for Rewards -------------
 
 # Reward for if the AI won the round
-reward_round_win = 0.3
+reward_round_win = 1.0
 # Discount for if the AI lost the round
-reward_round_loss = 0.3
-# Reward multiplier based on how much damage the AI did to their opponent
-reward_damage_multiplier = 0.2
+reward_round_loss = 1.0
+# Reward multiplier based on what percentage of opponent's hp was taken
+reward_damage_multiplier = 0.8
 # Discount multiplier based on how many rounds have been played.
-reward_round_n_multiplier = 0.02
+reward_round_n_multiplier = 0.01
 # Metric that aims for the AI to target this maximum number of rounds
 round_n_goal = 20
 # Reward/Discount for if a pokemon faints.
-reward_pokemon_faint = 0.1
+reward_pokemon_faint = 0.4
 # Discount for if the chosen action is to switch Pokemon.
 # The intention is to minimize switching repeatedly
-reward_punish_switch = 0.02
+reward_punish_switch = 0.05
 
 
 
@@ -506,11 +506,14 @@ def step(team1: Team, team2: Team, team1_action, team2_action):
     # Determine observation, or new state space
     observation = getState(team1, team2)
 
+    # Clamp rewards between [-1.0, 1.0]
+    team1_reward = max(-1.0, min(1.0, team1.reward))
+    team2_reward = max(-1.0, min(1.0, team2.reward))
+
     # Determine if game (episode) is over
     gameOver = isGameOver(team1, team2)
-
     # Return observation, rewards, gameOver
-    return observation, [team1.reward, team2.reward], gameOver
+    return observation, [team1_reward, team2_reward], gameOver
 
 
 def damageCalc(TeamAttacker, TeamDefender, move):  # damage calculation function
