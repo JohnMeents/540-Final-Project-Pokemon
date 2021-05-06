@@ -9,7 +9,6 @@ import numpy as np
 import sys
 import math
 
-
 # -------------------------------------Global Data--------------------------------------
 pokemon_types = ["Normal", "Fire", "Water", "Electric", "Grass", "Ice",
                  "Fighting", "Poison", "Ground", "Flying", "Psychic",
@@ -20,12 +19,11 @@ pokemon_types_dict = {'Normal': 1, 'Fire': 2, 'Water': 3, 'Electric': 4, 'Grass'
                       'Poison': 8, 'Ground': 9, 'Flying': 10, 'Psychic': 11, 'Bug': 12, 'Rock': 13, 'Ghost': 14,
                       'Dragon': 15, 'Dark': 16, 'Steel': 17, 'Fairy': 18}
 
-
 pokemon_conditions_dict = {
-    "None": 0,  "Paralyzed": 1,  "Asleep": 2,  "Burned": 3,  "Poisoned": 4,  "Confused": 6,  "Frozen": 7,
+    "None": 0, "Paralyzed": 1, "Asleep": 2, "Burned": 3, "Poisoned": 4, "Confused": 6, "Frozen": 7,
 }
 
-# A 2 Dimenstional Numpy Array Of Damage Multipliers For Attacking Pokemon:
+# A 2 Dimensional Numpy Array Of Damage Multipliers For Attacking Pokemon:
 # Origin of this table is at the top left and the sequence follows the list above
 # the row represents the attacking pokemon, the column represents the defending pokemon
 # the value represents the type damage modifier
@@ -35,40 +33,64 @@ pokemon_conditions_dict = {
 # 1/2: not very effective
 # for reference, see damage type chart on discord
 
-damage_array = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1/2, 0, 1, 1, 1/2, 1],
-                        [1, 1/2, 1/2, 1, 2, 2, 1, 1, 1, 1,
-                            1, 2, 1/2, 1, 1/2, 1, 2, 1],
-                        [1, 2, 1/2, 1, 1/2, 1, 1, 1, 2,
-                            1, 1, 1, 2, 1, 1/2, 1, 1, 1],
-                        [1, 1, 2, 1/2, 1/2, 1, 1, 1, 0,
-                            2, 1, 1, 1, 1, 1/2, 1, 1, 1],
-                        [1, 1/2, 2, 1, 1/2, 1, 1, 1/2, 2, 1 /
-                            2, 1, 1/2, 2, 1, 1/2, 1, 1/2, 1],
-                        [1, 1/2, 1/2, 1, 2, 1/2, 1, 1, 2,
-                            2, 1, 1, 1, 1, 2, 1, 1/2, 1],
-                        [2, 1, 1, 1, 1, 2, 1, 1/2, 1, 1/2,
-                            1/2, 1/2, 2, 0, 1, 2, 2, 1/2],
-                        [1, 1, 1, 1, 2, 1, 1, 1/2, 1/2, 1,
-                            1, 1, 1/2, 1/2, 1, 1, 0, 2],
-                        [1, 2, 1, 2, 1/2, 1, 1, 2, 1, 0,
-                            1, 1/2, 2, 1, 1, 1, 2, 1],
-                        [1, 1, 1, 1/2, 2, 1, 2, 1, 1, 1,
-                            1, 2, 1/2, 1, 1, 1, 1/2, 1],
-                        [1, 1, 1, 1, 1, 1, 2, 2, 1, 1,
-                            1/2, 1, 1, 1, 1, 0, 1/2, 1],
-                        [1, 1/2, 1, 1, 2, 1, 1/2, 1/2, 1, 1 /
-                            2, 2, 1, 1, 1/2, 1, 2, 1/2, 1/2],
-                        [1, 2, 1, 1, 1, 2, 1/2, 1, 1/2,
-                            2, 1, 2, 1, 1, 1, 1, 1/2, 1],
-                        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                            2, 1, 1, 2, 1, 1/2, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                            1, 1, 1, 1, 2, 1, 1/2, 0],
-                        [1, 1, 1, 1, 1, 1, 1/2, 1, 1, 1,
-                            2, 1, 1, 2, 1, 1/2, 1, 1/2],
-                        [1, 1/2, 1/2, 1/2, 1, 2, 1, 1, 1,
-                            1, 1, 1, 2, 1, 1, 1, 1/2, 2],
-                        [1, 1/2, 1, 1, 1, 1, 2, 1/2, 1, 1, 1, 1, 1, 1, 2, 2, 1/2, 1]])
+damage_array = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 / 2, 0, 1, 1, 1 / 2, 1],
+                         [1, 1 / 2, 1 / 2, 1, 2, 2, 1, 1, 1, 1,
+                          1, 2, 1 / 2, 1, 1 / 2, 1, 2, 1],
+                         [1, 2, 1 / 2, 1, 1 / 2, 1, 1, 1, 2,
+                          1, 1, 1, 2, 1, 1 / 2, 1, 1, 1],
+                         [1, 1, 2, 1 / 2, 1 / 2, 1, 1, 1, 0,
+                          2, 1, 1, 1, 1, 1 / 2, 1, 1, 1],
+                         [1, 1 / 2, 2, 1, 1 / 2, 1, 1, 1 / 2, 2, 1 /
+                          2, 1, 1 / 2, 2, 1, 1 / 2, 1, 1 / 2, 1],
+                         [1, 1 / 2, 1 / 2, 1, 2, 1 / 2, 1, 1, 2,
+                          2, 1, 1, 1, 1, 2, 1, 1 / 2, 1],
+                         [2, 1, 1, 1, 1, 2, 1, 1 / 2, 1, 1 / 2,
+                          1 / 2, 1 / 2, 2, 0, 1, 2, 2, 1 / 2],
+                         [1, 1, 1, 1, 2, 1, 1, 1 / 2, 1 / 2, 1,
+                          1, 1, 1 / 2, 1 / 2, 1, 1, 0, 2],
+                         [1, 2, 1, 2, 1 / 2, 1, 1, 2, 1, 0,
+                          1, 1 / 2, 2, 1, 1, 1, 2, 1],
+                         [1, 1, 1, 1 / 2, 2, 1, 2, 1, 1, 1,
+                          1, 2, 1 / 2, 1, 1, 1, 1 / 2, 1],
+                         [1, 1, 1, 1, 1, 1, 2, 2, 1, 1,
+                          1 / 2, 1, 1, 1, 1, 0, 1 / 2, 1],
+                         [1, 1 / 2, 1, 1, 2, 1, 1 / 2, 1 / 2, 1, 1 /
+                          2, 2, 1, 1, 1 / 2, 1, 2, 1 / 2, 1 / 2],
+                         [1, 2, 1, 1, 1, 2, 1 / 2, 1, 1 / 2,
+                          2, 1, 2, 1, 1, 1, 1, 1 / 2, 1],
+                         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                          2, 1, 1, 2, 1, 1 / 2, 1, 1],
+                         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                          1, 1, 1, 1, 2, 1, 1 / 2, 0],
+                         [1, 1, 1, 1, 1, 1, 1 / 2, 1, 1, 1,
+                          2, 1, 1, 2, 1, 1 / 2, 1, 1 / 2],
+                         [1, 1 / 2, 1 / 2, 1 / 2, 1, 2, 1, 1, 1,
+                          1, 1, 1, 2, 1, 1, 1, 1 / 2, 2],
+                         [1, 1 / 2, 1, 1, 1, 1, 2, 1 / 2, 1, 1, 1, 1, 1, 1, 2, 2, 1 / 2, 1]])
+
+
+# The highest round that a game will last
+max_round = 50
+
+# ------------- Parameters for Rewards
+
+# Reward for if the AI won the round
+reward_round_win = 0.3
+# Discount for if the AI lost the round
+reward_round_loss = 0.3
+# Reward multiplier based on how much damage the AI did to their opponent
+reward_damage_multiplier = 0.2
+# Discount multiplier based on how many rounds have been played.
+reward_round_n_multiplier = 0.02
+# Metric that aims for the AI to target this maximum number of rounds
+round_n_goal = 20
+# Reward/Discount for if a pokemon faints.
+reward_pokemon_faint = 0.1
+# Discount for if the chosen action is to switch Pokemon.
+# The intention is to minimize switching repeatedly
+reward_punish_switch = 0.02
+
+
 
 # -------------------------------------------------------------------------------------
 
@@ -93,18 +115,21 @@ class Team:
         self.hasAvailablePokemon = True
         self.reward = 0
         self.roundNumber = 0
+        # Set to true within fightSim if the previous Pokemon fainted prior to an automatic switch
+        self.faintedFlag = False
 
     # Returns an array that represents parameters about this object
     def toArray(self):
         return (self.Pokemon1.toArray() + self.Pokemon2.toArray() +
                 self.Pokemon3.toArray() +
                 [self.activePokemonN,
-                 int(self.hasAvailablePokemon)])
+                 int(self.hasAvailablePokemon), self.roundNumber])
 
 
 # Pokemon Class
 class Pokemon:
-    def __init__(self, name, type1, type2, healthPercentage, moves, status, hp, attack, spattack, defense, spdefense, speed, ability, item,):
+    def __init__(self, name, type1, type2, healthPercentage, moves, status, hp, attack, spattack, defense, spdefense,
+                 speed, ability, item, ):
         self.name = name
         self.type1 = type1  # changed this variable name from types to type1, updated in the toArray
         self.type2 = type2
@@ -127,16 +152,16 @@ class Pokemon:
         # Generate integer values for these strings
 
         return [
-            self.type1,
-            self.type2 if self.type2 is not None else 0,
-            self.healthPercentage,
-            self.attack,
-            self.spattack,
-            self.defense,
-            self.spdefense,
-            self.speed,
-            self.maxHp,
-        ] + [item for items in self.moves for item in items.toArray()]
+                   self.type1,
+                   self.type2 if self.type2 is not None else 0,
+                   self.healthPercentage,
+                   self.attack,
+                   self.spattack,
+                   self.defense,
+                   self.spdefense,
+                   self.speed,
+                   self.maxHp,
+               ] + [item for items in self.moves for item in items.toArray()]
 
 
 # Moves Class
@@ -153,7 +178,7 @@ class Move:
     # Returns an array that represents parameters about this object
     def toArray(self):
         physpc_int = (0 if self.physpc is None else 1 if self.physpc
-                      == "special" else 2 if self.physpc == "status" else -1)
+                                                         == "special" else 2 if self.physpc == "status" else -1)
         basePower_int = self.basePower if self.basePower is not None else -1
         return [
             self.moveType,
@@ -167,10 +192,13 @@ class Move:
 def fightSim(Team1, Team2, team1Action, team2Action):
     Team1.reward = 0
     Team2.reward = 0
+    Team1.faintedFlag = False
+    Team2.faintedFlag = False
 
     # if they switch pokemon, that action happens first before the opponent moves
     # switching Team1 pokemon
     if team1Action == 5 or team1Action == 6:
+        Team1.reward -= reward_punish_switch
         if (team1Action == 5 and Team1.Pokemon1.hp > 0 and Team1.activePokemon != Team1.Pokemon1):
             Team1.activePokemon = Team1.Pokemon1
             Team1.activePokemonN = 1
@@ -192,12 +220,11 @@ def fightSim(Team1, Team2, team1Action, team2Action):
             Team1.activePokemonN = 1
         else:
             # Attempt to select a Pokemon that has fainted
-            # Negatively impact the team's reward to discourage AI from attempting to switch to an invalid Pokemon
-            Team1.reward -= 5
             pass
 
     # switching Team2 pokemon
     if team2Action == 5 or team2Action == 6:
+        Team2.reward -= reward_punish_switch
         if (team2Action == 5 and Team2.Pokemon1.hp > 0 and Team2.activePokemon != Team2.Pokemon1):
             Team2.activePokemon = Team2.Pokemon1
             Team2.activePokemonN = 1
@@ -219,33 +246,29 @@ def fightSim(Team1, Team2, team1Action, team2Action):
             Team2.activePokemonN = 1
         else:
             # Attempt to select a Pokemon that has fainted
-            # Negatively impact the team's reward to discourage AI from attempting to switch to an invalid Pokemon
-            Team2.reward -= 5
             pass
 
     # if Team1 moves first
     if Team1.activePokemon.speed >= Team2.activePokemon.speed:
         # do calc
-        damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
-        Team1.reward += 3
+        damageCalc(Team1, Team2, team1Action)
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
-            damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
-            Team2.reward += 3
+            damageCalc(Team2, Team1, team2Action)
     # if Team2 moves first
     else:
         # do calc
-        damageCalc(Team2.activePokemon, Team1.activePokemon, team2Action)
-        Team2.reward += 3
+        damageCalc(Team2, Team1, team2Action)
         # other pokemon attacks if they didn't just faint
         if Team1.activePokemon.hp > 0 and Team2.activePokemon.hp > 0:
-            damageCalc(Team1.activePokemon, Team2.activePokemon, team1Action)
-            Team1.reward += 3
+            damageCalc(Team1, Team2, team1Action)
 
     # Automatically pick an available Pokemon if one of the teams' active pokemon fainted
     if (Team1.activePokemon.hp <= 0 and Team2.activePokemon.hp > 0 and Team1.hasAvailablePokemon):
+        Team1.faintedFlag = True
         # A Pokemon has fainted, punish the team
-        Team1.reward -= 5
+        Team1.reward -= reward_pokemon_faint
+        Team2.reward += reward_pokemon_faint
         # Automatically pick a Pokemon for Team 1
         if Team1.Pokemon1.hp > 0:
             Team1.activePokemon = Team1.Pokemon1
@@ -260,8 +283,10 @@ def fightSim(Team1, Team2, team1Action, team2Action):
             # All pokemon are fainted, this shouldn't happen from the above check
             pass
     elif (Team1.activePokemon.hp > 0 and Team2.activePokemon.hp <= 0 and Team2.hasAvailablePokemon):
+        Team2.faintedFlag = True
         # A Pokemon has fainted, punish the team
-        Team2.reward -= 5
+        Team1.reward += reward_pokemon_faint
+        Team2.reward -= reward_pokemon_faint
         # Automatically pick a Pokemon for Team 2
         if Team2.Pokemon1.hp > 0:
             Team2.activePokemon = Team2.Pokemon1
@@ -280,23 +305,36 @@ def fightSim(Team1, Team2, team1Action, team2Action):
         # therefore assume they're both alive
         pass
 
+    # Check if max round has been hit
+    if Team1.roundNumber >= max_round:
+        Team1.hasAvailablePokemon = False
+        Team2.hasAvailablePokemon = False
+        # Determine who has the most health by sum of percentages
+        team1_sum = Team1.Pokemon1.healthPercentage + Team1.Pokemon2.healthPercentage + Team1.Pokemon3.healthPercentage
+        team2_sum = Team2.Pokemon1.healthPercentage + Team2.Pokemon2.healthPercentage + Team2.Pokemon3.healthPercentage
+
+        Team1.reward += reward_round_win if team1_sum > team2_sum else -reward_round_loss if team1_sum < team2_sum else 0
+        Team2.reward += reward_round_win if team2_sum > team1_sum else -reward_round_loss if team2_sum < team1_sum else 0
+
     # check if each team has available pokemon
-    if (Team1.Pokemon1.hp <= 0 and Team1.Pokemon2.hp <= 0 and Team1.Pokemon3.hp <= 0):
+    if Team1.Pokemon1.hp <= 0 and Team1.Pokemon2.hp <= 0 and Team1.Pokemon3.hp <= 0:
         Team1.hasAvailablePokemon = False
         # Team1 lost, punish the AI
-        Team1.reward -= 7
+        Team1.reward -= reward_round_loss
         # By far the best heuristic metric is if an AI won the game
-        Team2.reward += 12
-    if (Team2.Pokemon1.hp <= 0 and Team2.Pokemon2.hp <= 0 and Team2.Pokemon3.hp <= 0):
+        Team2.reward += reward_round_win
+    if Team2.Pokemon1.hp <= 0 and Team2.Pokemon2.hp <= 0 and Team2.Pokemon3.hp <= 0:
         # Team2 lost, punish the AI
-        Team2.reward -= 7
+        Team2.reward -= reward_round_loss
         # By far the best heuristic metric is if an AI won the game
-        Team1.reward += 12
+        Team1.reward += reward_round_win
         Team2.hasAvailablePokemon = False
 
     # Discourage the AI from playing long games by linearly increasing a punishment
-    Team1.reward -= int(Team1.roundNumber / 5)
-    Team2.reward -= int(Team2.roundNumber / 5)
+    roundFactor = float(Team1.roundNumber) / round_n_goal # Denominator represents number of desired rounds
+    roundDiscount = max(1.0, roundFactor)
+    Team1.reward -= roundDiscount * reward_round_n_multiplier
+    Team2.reward -= roundDiscount * reward_round_n_multiplier
 
     Team1.roundNumber += 1
     Team2.roundNumber += 1
@@ -305,6 +343,9 @@ def fightSim(Team1, Team2, team1Action, team2Action):
 # Returns an array of parameters
 def getState(team1: Team, team2: Team):
     return team1.toArray() + team2.toArray()
+
+
+
 
 
 def battleSim(Team1, Team2, ai=None, ai_is_a=True):
@@ -322,7 +363,7 @@ def battleSim(Team1, Team2, ai=None, ai_is_a=True):
             delayPrint("\n")
             delayPrint("Health percentage: ")
             print(Team1.activePokemon.healthPercentage)
-            delayPrint("Team 1's active Pokemon: ")
+            delayPrint("Team 2's active Pokemon: ")
             delayPrint(Team2.activePokemon.name)
             delayPrint("\n")
             delayPrint("Health percentage: ")
@@ -330,8 +371,8 @@ def battleSim(Team1, Team2, ai=None, ai_is_a=True):
 
             if ai is not None and ai_is_a:
                 # Playing against AI, and AI is player 1
-                chooseTeam1Move = ai.choose_action(getState(Team1, Team2))
-                delayPrint('[AI chose %i]' % chooseTeam1Move)
+                chooseTeam1Move = ai.choose_action(getState(Team1, Team2)) + 1
+                delayPrint('[AI chose %i]\n' % chooseTeam1Move)
             else:
                 validInput1 = False
                 # moves are chosen for Team 1
@@ -369,8 +410,8 @@ def battleSim(Team1, Team2, ai=None, ai_is_a=True):
 
             if ai is not None and not ai_is_a:
                 # Playing against AI and AI is Player 2
-                chooseTeam2Move = ai.choose_action(getState(Team1, Team2))
-                delayPrint('[AI chose %i]' % chooseTeam2Move)
+                chooseTeam2Move = ai.choose_action(getState(Team1, Team2)) + 1
+                delayPrint('[AI chose %i]\n' % chooseTeam2Move)
             else:
                 validInput2 = False
                 # moves are chosen for Team 2
@@ -413,22 +454,27 @@ def battleSim(Team1, Team2, ai=None, ai_is_a=True):
             # turn happens
             fightSim(Team1, Team2, chooseTeam1Move, chooseTeam2Move)
 
+            if chooseTeam1Move > 4:
+                delayPrint("Team 1 switched to %s!\n" % Team1.activePokemon.name)
+            if chooseTeam2Move > 4:
+                delayPrint("Team 2 switched to %s!\n" % Team2.activePokemon.name)
+
             # print out action info
-            if (chooseTeam1Move < 5 and Team1.activePokemon.hp > 0):
+            if (chooseTeam1Move < 5 and Team1.activePokemon.hp > 0 and not Team1.faintedFlag):
                 delayPrint(Team1.activePokemon.name)
                 delayPrint(" used ")
                 delayPrint(Team1.activePokemon.moves[(
-                    chooseTeam1Move - 1)].moveName)
+                        chooseTeam1Move - 1)].moveName)
                 delayPrint("!\n")
                 if (Team2.activePokemon.hp > 0):
                     delayPrint(Team2.activePokemon.name + " has ")
                     print(Team2.activePokemon.healthPercentage, end='')
                     delayPrint(" percent health\n")
-            if (chooseTeam2Move < 5 and Team2.activePokemon.hp > 0):
+            if (chooseTeam2Move < 5 and Team2.activePokemon.hp > 0 and not Team2.faintedFlag):
                 delayPrint(Team2.activePokemon.name)
                 delayPrint(" used ")
                 delayPrint(Team2.activePokemon.moves[(
-                    chooseTeam2Move - 1)].moveName)
+                        chooseTeam2Move - 1)].moveName)
                 delayPrint("!\n")
                 if (Team1.activePokemon.hp > 0):
                     delayPrint(Team1.activePokemon.name + " has ")
@@ -436,12 +482,10 @@ def battleSim(Team1, Team2, ai=None, ai_is_a=True):
                     delayPrint(" percent health\n")
 
             # if a pokemon faints:
-            if Team1.activePokemon.hp <= 0:
-                delayPrint(Team1.activePokemon.name +
-                           " fainted!\n")
-            if Team2.activePokemon.hp <= 0:
-                delayPrint(Team2.activePokemon.name +
-                           " fainted!\n")
+            if Team1.faintedFlag:
+                delayPrint("Team 1's pokemon fainted! Automatically switched to %s\n" % Team1.activePokemon.name)
+            if Team2.faintedFlag:
+                delayPrint("Team 2's pokemon fainted! Automatically switched to %s\n" % Team2.activePokemon.name)
 
     # print winning team
     if Team1.hasAvailablePokemon and (Team2.hasAvailablePokemon == False):
@@ -456,24 +500,23 @@ def isGameOver(team1: Team, team2: Team):
 
 # Perform a step in the game simulation. This is primarily used by the AI
 def step(team1: Team, team2: Team, team1_action, team2_action):
-
     # Perform the turn/round
     fightSim(team1, team2, team1_action, team2_action)
 
     # Determine observation, or new state space
     observation = getState(team1, team2)
 
-    reward_a = team1.reward
-    reward_b = team2.reward
-
     # Determine if game (episode) is over
     gameOver = isGameOver(team1, team2)
 
     # Return observation, rewards, gameOver
-    return observation, [reward_a, reward_b], gameOver
+    return observation, [team1.reward, team2.reward], gameOver
 
 
-def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
+def damageCalc(TeamAttacker, TeamDefender, move):  # damage calculation function
+    Pokemon1 = TeamAttacker.activePokemon
+    Pokemon2 = TeamDefender.activePokemon
+
     # Pokemon1 is the attacking pokemon, Pokemon2 is the defending pokemon
     # do nothing if the move is 5 or 6 (a switch)
     if move == 5 or move == 6:
@@ -510,11 +553,11 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
         # determine the type effectiveness
         if Pokemon2.type2 == None:  # If the defending pokemon only has one type
             typeEffectiveness = damage_array[Pokemon1.moves[(
-                move - 1)].moveType][Pokemon2.type1]
+                    move - 1)].moveType][Pokemon2.type1]
         else:  # if the defending pokemon is dual type
             typeEffectiveness = (damage_array[Pokemon1.moves[(
-                move - 1)].moveType][Pokemon2.type1] * damage_array[Pokemon1.moves[(move - 1)].moveType][
-                Pokemon2.type2])
+                    move - 1)].moveType][Pokemon2.type1] * damage_array[Pokemon1.moves[(move - 1)].moveType][
+                                     Pokemon2.type2])
 
         # Determine if the Attacker gets a damage reduction for being burned and using a physical move
         burn = 1.0
@@ -532,16 +575,19 @@ def damageCalc(Pokemon1, Pokemon2, move):  # damage calculation function
         # if the move is physical
         if Pokemon1.moves[(move - 1)].physpc == "physical":
             damage = (((
-                ((((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
-                 (Pokemon1.attack / Pokemon2.defense)) / 50.0) + 2.0) * modifier)
+                               ((((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
+                                (Pokemon1.attack / Pokemon2.defense)) / 50.0) + 2.0) * modifier)
         # if the move is special
         else:
             damage = ((((
-                (((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
-                (Pokemon1.spattack / Pokemon2.spdefense)) / 50.0) + 2.0) * modifier)
+                                (((2.0 * Pokemon1.level) / 5.0) + 2.0) * bp *
+                                (Pokemon1.spattack / Pokemon2.spdefense)) / 50.0) + 2.0) * modifier)
 
         # apply damage
         Pokemon2.hp -= damage
+        rewardFactor = float(damage) / float(Pokemon2.maxHp) * reward_damage_multiplier
+        TeamAttacker.reward += rewardFactor
+
         # Pokemon2.healthPercentage = (Pokemon2.hp / Pokemon2.maxHp) * 100
         Pokemon2.healthPercentage = math.ceil(
             ((Pokemon2.hp / Pokemon2.maxHp) * 100))
@@ -882,6 +928,22 @@ def generate_team_2():
         "At the end of every turn, the user restores 1/16 of its maximum hp",
     )
     return Team("Team2", Charizard, Blastoise, Venusaur)
+
+
+def evaluator_highest_damage_action(team: Team):
+    active = team.activePokemon
+    best = 0
+    highest_damage_move = active.moves[0].basePower \
+                          * float(active.moves[0].accuracy) / 100.0
+
+    for i in range(1, 3):
+        tmp = active.moves[i].basePower * float(active.moves[i].accuracy) / 100.0
+
+        if tmp > highest_damage_move:
+            highest_damage_move = tmp
+            best = i
+
+    return i + 1
 
 
 # Pokemon simulation game when running pokemon.py
